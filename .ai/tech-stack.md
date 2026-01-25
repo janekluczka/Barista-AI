@@ -1,7 +1,9 @@
 Frontend - Android:
 - Kotlin
 - Jetpack Compose
+- Material 3 components
 - Hilt
+- Ktor
 
 Backend
 - Supabase
