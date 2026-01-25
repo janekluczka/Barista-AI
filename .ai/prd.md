@@ -18,12 +18,16 @@ Parzenie kawy alternatywnej jest trudne, szczególnie dla początkujących. Wyso
 8. Odrzucenie przepisu tworzy log w osobnej tabeli do oceny jakości modeli.
 9. Manualne wprowadzanie przepisu z tym samym zestawem pól co w edycji.
 10. Przeglądanie listy zapisanych przepisów z możliwością edycji i usuwania.
-11. Integracja zapisanych przepisów z gotowym algorytmem powtórek na poziomie przepisu.
+11. W MVP brak algorytmu powtórek; zamiast tego wykrywanie podobnych przepisów przy dodawaniu.
 12. Prosty system kont użytkowników: rejestracja i logowanie przez email i hasło oraz Google Sign-In.
 13. Dostęp do danych wyłącznie online, bez trybu offline.
+14. Żądanie generowania może zawierać komentarz użytkownika.
+15. Przepis może zawierać poradę asystenta.
+16. Zapisany przepis ma status; szkic AI nie ma statusu.
+17. Retencja szkiców AI wynosi 7 dni.
 
 ## 4. Granice produktu
-1. Brak zaawansowanego, własnego algorytmu powtórek (wykorzystanie gotowego).
+1. Brak algorytmu powtórek w MVP; brak planowania powtórek.
 2. Brak zapisywania i powiązania ziaren kawy z przepisem.
 3. Brak współdzielenia zestawów przepisów między użytkownikami.
 4. Brak aplikacji webowej i iOS w MVP.
@@ -107,11 +111,11 @@ Parzenie kawy alternatywnej jest trudne, szczególnie dla początkujących. Wyso
   - Usuniętego przepisu nie da się otworzyć z aplikacji.
 
 - ID: US-011
-  Tytuł: Powtórki zapisanych przepisów
-  Opis: Jako użytkownik chcę korzystać z powtórek dla zapisanych przepisów, aby lepiej je zapamiętać.
+  Tytuł: Wykrywanie podobnych przepisów
+  Opis: Jako użytkownik chcę zobaczyć podobne przepisy przy dodawaniu, aby uniknąć duplikatów.
   Kryteria akceptacji:
-  - System planuje powtórki na poziomie przepisu.
-  - Użytkownik może wejść w tryb powtórek i zobaczyć przepis do przećwiczenia.
+  - System porównuje dodawany przepis z zapisanymi na podstawie metody, ilości kawy, ratio i temperatury.
+  - Użytkownik widzi podobne przepisy i może kontynuować lub anulować zapis.
 
 - ID: US-012
   Tytuł: Rejestracja konta przez email i hasło

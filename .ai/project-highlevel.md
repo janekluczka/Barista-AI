@@ -6,10 +6,8 @@ Parzenie kawy alternatywnej (V60, Chemex, Aeropress, Moka) jest trudne, szczegó
 - Manualne wprowadzanie przepisu.
 - Przeglądanie, edycja i usuwanie przepisu.
 - Prosty system kont użytkowników do przechowywania przepisów
-- Integracja przepisów z gotowym algorytmem powtórek
 
 ### Co NIE wchodzi w zakres MVP
-- Własny, zaawansowany algorytm powtórek (jak SuperMemo, Anki)
 - Zapisywanie ziaren kawy powiązanych z przepisem
 - Współdzielenie zestawów przepisów między użytkownikami
 - Aplikacja webowa oraz iOS (na początek tylko Android)
