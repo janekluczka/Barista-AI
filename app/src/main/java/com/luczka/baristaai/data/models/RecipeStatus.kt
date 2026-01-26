@@ -12,6 +12,8 @@ enum class RecipeStatus {
     Draft,
     @SerialName("saved")
     Saved,
+    @SerialName("edited")
+    Edited,
     @SerialName("rejected")
     Rejected,
     @SerialName("deleted")

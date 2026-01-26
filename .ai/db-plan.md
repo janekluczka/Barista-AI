@@ -39,7 +39,7 @@
 - `created_at` timestamptz not null default now()
 
 **Enumy**
-- `recipe_status_enum`: `draft`, `saved`, `rejected`, `deleted`
+- `recipe_status_enum`: `draft`, `saved`, `edited`, `rejected`, `deleted`
 - `recipe_action_enum`: `accepted`, `edited`, `rejected`
 
 2. Relacje między tabelami

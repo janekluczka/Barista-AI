@@ -2,7 +2,7 @@
 <decisions>
 1. Przechowujemy żądania generowania i powiązania z przepisami; generowanie ma osobne rekordy.
 2. Jest 1 tabela przepisów `recipes` obejmująca szkice i zapisane wersje.
-3. Przepis ma status (enum) z 4 wartościami, w tym `draft`.
+3. Przepis ma status (enum) z 5 wartościami, w tym `draft`.
 4. Metody parzenia w osobnej tabeli z `id` + `slug`.
 6. Typy danych: kawa i woda jako liczby z 1 miejscem po przecinku; temperatura `int` 0..100; proporcje jako `int` (kawa/woda).
 7. Ograniczenia: kawa i woda >= 0, proporcje od 1 wzwyż.
@@ -16,7 +16,7 @@
 
 <matched_recommendations>
 1. Oddziel `generation_requests` od `recipes`, aby łatwo logować decyzje i analizować jakość AI.
-2. Statusy trzymać w `recipes` (enum 4 wartości).
+2. Statusy trzymać w `recipes` (enum 5 wartości).
 3. Osobna tabela metod parzenia z `id` i unikalnym `slug`.
 4. RLS na `user_id` dla wszystkich tabel użytkownikowych; logi tylko dla właściciela.
 5. `numeric(6,1)` dla ilości kawy i wody; `int` dla temperatury i proporcji.
@@ -27,7 +27,7 @@
 <database_planning_summary>
 a. Główne wymagania:
 - Zapis żądań generowania i do 3 szkiców AI w `recipes`.
-- Statusy jako enum (4 wartości) w `recipes`.
+- Statusy jako enum (5 wartości) w `recipes`.
 - Dodatkowe pola: komentarz użytkownika w żądaniu i porada asystenta w przepisie.
 - Brak wersjonowania; tylko `created_at`, `updated_at`.
 

@@ -6,7 +6,7 @@
 - `recipes` -> `RecipeDto` (id, userId, generationRequestId?, brewMethodId, coffeeAmount, waterAmount, ratioCoffee, ratioWater, temperature, assistantTip?, status, createdAt, updatedAt)
 - `recipe_action_logs` -> `RecipeActionLogDto` (id, userId, recipeId, generationRequestId?, action, createdAt)
 - Enums:
-  - `recipe_status_enum` -> `RecipeStatus` (draft, saved, rejected, deleted)
+  - `recipe_status_enum` -> `RecipeStatus` (draft, saved, edited, rejected, deleted)
   - `recipe_action_enum` -> `RecipeAction` (accepted, edited, rejected)
 
 ## 2. SupabaseClient Operations

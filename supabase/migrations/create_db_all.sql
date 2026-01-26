@@ -3,7 +3,7 @@
 
 -- region: tables
 -- enums for recipe lifecycle and user actions
-create type public.recipe_status_enum as enum ('draft', 'saved', 'rejected', 'deleted');
+create type public.recipe_status_enum as enum ('draft', 'saved', 'edited', 'rejected', 'deleted');
 create type public.recipe_action_enum as enum ('accepted', 'edited', 'rejected');
 
 -- brew methods catalog (publicly readable)
