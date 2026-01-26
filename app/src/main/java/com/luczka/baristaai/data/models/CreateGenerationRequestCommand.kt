@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 /**
  * Command for inserting a `generation_requests` row.
  *
- * @property userId UUID string.
  * @property brewMethodId UUID string.
  * @property coffeeAmount numeric(6,1) mapped to Double.
  * @property canAdjustTemperature User can adjust temperature.
@@ -14,8 +13,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CreateGenerationRequestCommand(
-    @SerialName("user_id")
-    val userId: String,
     @SerialName("brew_method_id")
     val brewMethodId: String,
     @SerialName("coffee_amount")

@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Command for updating a `recipes` row with partial fields.
  *
+ * @property id UUID string.
  * @property brewMethodId UUID string.
  * @property coffeeAmount numeric(6,1) mapped to Double.
  * @property waterAmount numeric(6,1) mapped to Double.
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class UpdateRecipeCommand(
+    @SerialName("id")
+    val id: String,
     @SerialName("brew_method_id")
     val brewMethodId: String? = null,
     @SerialName("coffee_amount")

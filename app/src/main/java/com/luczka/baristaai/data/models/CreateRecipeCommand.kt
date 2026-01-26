@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 /**
  * Command for inserting a `recipes` row.
  *
- * @property userId UUID string.
  * @property generationRequestId UUID string.
  * @property brewMethodId UUID string.
  * @property coffeeAmount numeric(6,1) mapped to Double.
@@ -19,8 +18,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CreateRecipeCommand(
-    @SerialName("user_id")
-    val userId: String,
     @SerialName("generation_request_id")
     val generationRequestId: String?,
     @SerialName("brew_method_id")
