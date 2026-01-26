@@ -3,14 +3,26 @@ package com.luczka.baristaai.data.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Command for updating a `recipes` row with partial fields.
+ *
+ * @property brewMethodId UUID string.
+ * @property coffeeAmount numeric(6,1) mapped to Double.
+ * @property waterAmount numeric(6,1) mapped to Double.
+ * @property ratioCoffee Coffee part of ratio.
+ * @property ratioWater Water part of ratio.
+ * @property temperature Brew temperature in Celsius.
+ * @property assistantTip Optional assistant note.
+ * @property status Lifecycle status.
+ */
 @Serializable
 data class UpdateRecipeCommand(
     @SerialName("brew_method_id")
-    val brewMethodId: String? = null, // UUID as string
+    val brewMethodId: String? = null,
     @SerialName("coffee_amount")
-    val coffeeAmount: Double? = null, // numeric(6,1)
+    val coffeeAmount: Double? = null,
     @SerialName("water_amount")
-    val waterAmount: Double? = null, // numeric(6,1)
+    val waterAmount: Double? = null,
     @SerialName("ratio_coffee")
     val ratioCoffee: Int? = null,
     @SerialName("ratio_water")
