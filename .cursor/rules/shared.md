@@ -42,14 +42,6 @@ When modifying the directory structure, always update this section.
 - Implement proper error logging and user-friendly error messages.
 - Consider using custom error types or error factories for consistent error handling.
 
-### Commit guidelines
-
-- Use Conventional Commits with a clear, capitalized summary after the type.
-  - Example: `chore: Add AI coding rules`
-- Prefer present-tense, imperative summaries.
-- Keep the subject under ~70 characters and avoid trailing periods.
-- Use the body to explain the "why" when the change is non-trivial.
-
 ### MVI in Compose
 
 - Use unidirectional flow: `Intent` -> `ViewModel` -> `State` / `Effect`.
