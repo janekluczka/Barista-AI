@@ -1,3 +1,6 @@
+---
+alwaysApply: true
+---
 
 You are a Senior Kotlin programmer with experience in the Android framework and a preference for clean programming and design patterns.
 
@@ -103,4 +106,4 @@ Generate code, corrections, and refactorings that comply with the basic principl
 ### Testing
 
 - Use AndroidX/JUnit for unit tests and Espresso for UI tests.
-- Use integration tests for critical API or data flows.   
+- Use integration tests for critical API or data flows.

@@ -1,8 +1,7 @@
 ---
-Rule Type: Always
+description: 
+alwaysApply: true
 ---
-
-# AI Rules for BaristaAI
 
 BaristaAI is an Android app (min API 30) that helps beginners brew coffee with AI-generated recipes and lets them save, edit, and repeat recipes.
 

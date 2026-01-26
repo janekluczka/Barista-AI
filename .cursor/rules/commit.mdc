@@ -1,4 +1,9 @@
-### Commit guidelines
+---
+description: 
+alwaysApply: true
+---
+
+Commit guidelines
 
 - Use Conventional Commits with a clear, capitalized summary after the type.
 - Prefer present-tense, imperative summaries.
@@ -15,11 +20,11 @@ Format: `<type>(<scope>): <subject>`
 
 ```
 feat: Add coffee input screen
-^--^  ^---------------------^
+^--^  ^---^
 |     |
 |     +-> Summary in present tense.
 |
-+-------> Type: chore, docs, feat, fix, refactor, style, or test.
++----> Type: chore, docs, feat, fix, refactor, style, or test.
 ```
 
 More Examples:
