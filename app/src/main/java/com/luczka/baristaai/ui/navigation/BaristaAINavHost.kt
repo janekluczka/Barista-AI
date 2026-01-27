@@ -6,7 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.luczka.baristaai.ui.screens.home.HomeScreen
+import com.luczka.baristaai.ui.screens.home.HomeEvent
+import com.luczka.baristaai.ui.screens.home.HomeRoute
 
 @Composable
 fun BaristaAINavHost(
@@ -15,7 +16,7 @@ fun BaristaAINavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Graph.Auth,
+        startDestination = Graph.App,
         modifier = modifier
     ) {
         navigation<Graph.Auth>(startDestination = Route.AuthLanding) {
@@ -31,7 +32,18 @@ fun BaristaAINavHost(
 
         navigation<Graph.App>(startDestination = Route.Home) {
             composable<Route.Home> {
-                HomeScreen()
+                HomeRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            HomeEvent.NavigateToProfile -> navController.navigate(Route.Profile)
+                            HomeEvent.NavigateToGenerate -> navController.navigate(Route.GenerateRecipe)
+                            is HomeEvent.NavigateToRecipeDetail -> navController.navigate(
+                                Route.RecipeDetail(recipeId = event.recipeId)
+                            )
+                            is HomeEvent.ShowError -> Unit
+                        }
+                    }
+                )
             }
 
             composable<Route.GenerateRecipe> {

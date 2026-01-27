@@ -1,11 +1,277 @@
 package com.luczka.baristaai.ui.screens.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun HomeScreen() {
-    Box(modifier = Modifier.fillMaxSize())
+fun HomeRoute(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onEvent: (HomeEvent) -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collectLatest { event ->
+            when (event) {
+                is HomeEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+                else -> onEvent(event)
+            }
+        }
+    }
+
+    HomeScreen(
+        uiState = uiState,
+        onAction = viewModel::handleAction,
+        snackbarHostState = snackbarHostState
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    uiState: HomeUiState,
+    onAction: (HomeAction) -> Unit,
+    snackbarHostState: SnackbarHostState
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "BaristaAI") },
+                actions = {
+                    IconButton(onClick = { onAction(HomeAction.OpenProfile) }) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile"
+                            )
+                        }
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { onAction(HomeAction.OpenGenerate) }) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Generate recipe"
+                )
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            FilterRow(
+                filters = uiState.filters,
+                selectedFilterId = uiState.selectedFilterId,
+                onSelectFilter = { filterId ->
+                    onAction(HomeAction.SelectFilter(filterId))
+                }
+            )
+
+            if (uiState.errorMessage != null) {
+                Text(
+                    text = uiState.errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@Column
+            }
+
+            RecipeList(
+                recipes = uiState.recipes,
+                modifier = Modifier.fillMaxSize(),
+                onRecipeClick = { recipeId ->
+                    onAction(HomeAction.OpenRecipeDetail(recipeId))
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilterRow(
+    filters: List<FilterUiState>,
+    selectedFilterId: String?,
+    onSelectFilter: (String?) -> Unit
+) {
+    val allFilter = FilterUiState(
+        id = FilterUiState.ALL_FILTER_ID,
+        label = "All recipes"
+    )
+    val allFilters = listOf(allFilter) + filters
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(allFilters, key = { it.id }) { filter ->
+            val isSelected = if (filter.id == FilterUiState.ALL_FILTER_ID) {
+                selectedFilterId == null
+            } else {
+                filter.id == selectedFilterId
+            }
+            FilterChip(
+                selected = isSelected,
+                onClick = { onSelectFilter(filter.id) },
+                label = {
+                    Text(
+                        text = filter.label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecipeList(
+    recipes: List<RecipeUiState>,
+    modifier: Modifier = Modifier,
+    onRecipeClick: (String) -> Unit
+) {
+    if (recipes.isEmpty()) {
+        Box(
+            modifier = modifier.padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "No recipes yet.")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tap + to generate your first recipe.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        return
+    }
+
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(recipes, key = { it.id }) { recipe ->
+            RecipePlaceholderItem(
+                recipe = recipe,
+                onClick = { onRecipeClick(recipe.id) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecipePlaceholderItem(
+    recipe: RecipeUiState,
+    onClick: () -> Unit
+) {
+    // TODO: Replace with real recipe card component.
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = recipe.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = recipe.methodId, style = MaterialTheme.typography.bodyMedium)
+                Text(text = recipe.status, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenEmptyPreview() {
+    HomeScreen(
+        uiState = HomeUiState(),
+        onAction = {},
+        snackbarHostState = SnackbarHostState()
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenLoadingPreview() {
+    HomeScreen(
+        uiState = HomeUiState(isLoading = true),
+        onAction = {},
+        snackbarHostState = SnackbarHostState()
+    )
 }
