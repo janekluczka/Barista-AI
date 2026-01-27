@@ -1,5 +1,6 @@
 package com.luczka.baristaai.data.datasource
 
+import android.util.Log
 import io.github.jan.supabase.SupabaseClient
 import javax.inject.Inject
 
@@ -13,6 +14,11 @@ class SupabaseDataSourceImpl @Inject constructor(
         //     throw UnauthorizedException("User is not authenticated.")
         // }
         // return userId
+        Log.e(TAG, "Supabase auth not configured; returning empty user id.")
         return ""
+    }
+
+    private companion object {
+        const val TAG: String = "SupabaseDataSource"
     }
 }

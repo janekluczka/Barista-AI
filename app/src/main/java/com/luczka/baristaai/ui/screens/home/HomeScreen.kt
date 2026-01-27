@@ -160,17 +160,12 @@ private fun FilterRow(
     selectedFilterId: String?,
     onSelectFilter: (String?) -> Unit
 ) {
-    val allFilter = FilterUiState(
-        id = FilterUiState.ALL_FILTER_ID,
-        label = "All recipes"
-    )
-    val allFilters = listOf(allFilter) + filters
-
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(allFilters, key = { it.id }) { filter ->
+        items(filters, key = { it.id }) { filter ->
             val isSelected = if (filter.id == FilterUiState.ALL_FILTER_ID) {
                 selectedFilterId == null
             } else {
@@ -260,7 +255,13 @@ private fun RecipePlaceholderItem(
 @Composable
 private fun HomeScreenEmptyPreview() {
     HomeScreen(
-        uiState = HomeUiState(),
+        uiState = HomeUiState(
+            filters = listOf(
+                FilterUiState(id = FilterUiState.ALL_FILTER_ID, label = "All recipes"),
+                FilterUiState(id = "v60", label = "V60"),
+                FilterUiState(id = "aeropress", label = "Aeropress")
+            )
+        ),
         onAction = {},
         snackbarHostState = SnackbarHostState()
     )
@@ -270,7 +271,14 @@ private fun HomeScreenEmptyPreview() {
 @Composable
 private fun HomeScreenLoadingPreview() {
     HomeScreen(
-        uiState = HomeUiState(isLoading = true),
+        uiState = HomeUiState(
+            isLoading = true,
+            filters = listOf(
+                FilterUiState(id = FilterUiState.ALL_FILTER_ID, label = "All recipes"),
+                FilterUiState(id = "v60", label = "V60"),
+                FilterUiState(id = "aeropress", label = "Aeropress")
+            )
+        ),
         onAction = {},
         snackbarHostState = SnackbarHostState()
     )

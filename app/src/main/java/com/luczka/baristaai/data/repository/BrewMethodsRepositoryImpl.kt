@@ -1,25 +1,37 @@
 package com.luczka.baristaai.data.repository
 
+import android.util.Log
 import com.luczka.baristaai.data.datasource.SupabaseDataSource
+import com.luczka.baristaai.data.mapper.toDomain
+import com.luczka.baristaai.data.models.BrewMethodDto
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.BrewMethod
-import com.luczka.baristaai.domain.model.PageRequest
-import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.repository.BrewMethodsRepository
+import io.github.jan.supabase.postgrest.postgrest
 import javax.inject.Inject
 
 class BrewMethodsRepositoryImpl @Inject constructor(
     private val dataSource: SupabaseDataSource
 ) : BrewMethodsRepository {
 
-    override suspend fun listBrewMethods(
-        page: PageRequest,
-        sort: SortOption
-    ): RepositoryResult<List<BrewMethod>> {
-        // TODO: Implement Supabase query for brew methods list.
-        return RepositoryResult.Failure(
-            RepositoryError.Unknown("Not implemented yet.")
+    override suspend fun listBrewMethods(): RepositoryResult<List<BrewMethod>> {
+        val result = runCatching {
+            dataSource.client
+                .postgrest["brew_methods"]
+                .select()
+                .decodeList<BrewMethodDto>()
+                .map { it.toDomain() }
+        }
+
+        return result.fold(
+            onSuccess = { RepositoryResult.Success(it) },
+            onFailure = {
+                Log.e(TAG, "Failed to load brew methods.", it)
+                RepositoryResult.Failure(
+                    RepositoryError.Unknown("Failed to load brew methods.", it)
+                )
+            }
         )
     }
 
@@ -35,5 +47,9 @@ class BrewMethodsRepositoryImpl @Inject constructor(
         return RepositoryResult.Failure(
             RepositoryError.Unknown("Not implemented yet.")
         )
+    }
+
+    private companion object {
+        const val TAG: String = "BrewMethodsRepository"
     }
 }

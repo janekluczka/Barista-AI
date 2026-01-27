@@ -2,6 +2,9 @@ package com.luczka.baristaai.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.luczka.baristaai.domain.error.RepositoryResult
+import com.luczka.baristaai.domain.model.BrewMethod
+import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +15,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val listBrewMethodsUseCase: ListBrewMethodsUseCase
+) : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
@@ -41,21 +46,22 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             errorMessage = null
         )
 
-        val result = runCatching {
-            // TODO: Load filters and recipes from use cases or repository.
-        }
+        viewModelScope.launch {
+            val filtersResult = listBrewMethodsUseCase()
+            if (filtersResult is RepositoryResult.Failure) {
+                showError("Failed to load brew methods.")
+                return@launch
+            }
 
-        if (result.isFailure) {
-            showError("Failed to load recipes.")
-            return
-        }
+            val filters = buildFilters((filtersResult as RepositoryResult.Success).value)
 
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            filters = emptyList(),
-            recipes = emptyList(),
-            errorMessage = null
-        )
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                filters = filters,
+                recipes = emptyList(),
+                errorMessage = null
+            )
+        }
     }
 
     private fun selectFilter(filterId: String?) {
@@ -78,5 +84,14 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             errorMessage = message
         )
         sendEvent(HomeEvent.ShowError(message))
+    }
+
+    private fun buildFilters(methods: List<BrewMethod>): List<FilterUiState> {
+        val allFilter = FilterUiState(
+            id = FilterUiState.ALL_FILTER_ID,
+            label = "All recipes"
+        )
+        val methodFilters = methods.map { it.toFilterUiState() }
+        return listOf(allFilter) + methodFilters
     }
 }
