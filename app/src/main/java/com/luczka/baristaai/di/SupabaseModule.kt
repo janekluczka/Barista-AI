@@ -22,6 +22,8 @@ object SupabaseModule {
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_ANON_KEY
         ) {
+            // TODO: Re-enable when Supabase Auth is implemented.
+            // install(Auth)
             install(Postgrest)
         }
     }

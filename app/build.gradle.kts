@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(platform(libs.supabase.bom))
+    // TODO: Re-enable when Supabase Auth is implemented.
+    // implementation(libs.supabase.auth.kt)
     implementation(libs.supabase.postgrest.kt)
     implementation(libs.ktor.client.android)
     implementation(libs.hilt.android)
