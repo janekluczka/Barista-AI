@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.luczka.baristaai.ui.screens.auth.AuthLandingRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
 
@@ -21,6 +22,10 @@ fun BaristaAINavHost(
     ) {
         navigation<Graph.Auth>(startDestination = Route.AuthLanding) {
             composable<Route.AuthLanding> {
+                AuthLandingRoute(
+                    onLoginClick = { navController.navigate(Route.Login) },
+                    onRegisterClick = { navController.navigate(Route.Register) }
+                )
             }
 
             composable<Route.Login> {
