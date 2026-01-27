@@ -6,9 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.luczka.baristaai.ui.screens.auth.AuthLandingEvent
 import com.luczka.baristaai.ui.screens.auth.AuthLandingRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
+import com.luczka.baristaai.ui.screens.profile.ProfileEvent
+import com.luczka.baristaai.ui.screens.profile.ProfileRoute
 
 @Composable
 fun BaristaAINavHost(
@@ -22,10 +25,12 @@ fun BaristaAINavHost(
     ) {
         navigation<Graph.Auth>(startDestination = Route.AuthLanding) {
             composable<Route.AuthLanding> {
-                AuthLandingRoute(
-                    onLoginClick = { navController.navigate(Route.Login) },
-                    onRegisterClick = { navController.navigate(Route.Register) }
-                )
+                AuthLandingRoute { event ->
+                    when (event) {
+                        AuthLandingEvent.NavigateToLogin -> navController.navigate(Route.Login)
+                        AuthLandingEvent.NavigateToRegister -> navController.navigate(Route.Register)
+                    }
+                }
             }
 
             composable<Route.Login> {
@@ -64,6 +69,21 @@ fun BaristaAINavHost(
             }
 
             composable<Route.Profile> {
+                ProfileRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            ProfileEvent.NavigateBack -> navController.popBackStack()
+                            ProfileEvent.NavigateToAuthLanding -> {
+                                navController.navigate(Route.AuthLanding) {
+                                    popUpTo<Route.Home> {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                            is ProfileEvent.ShowError -> Unit
+                        }
+                    }
+                )
             }
         }
     }

@@ -19,13 +19,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AuthLandingRoute(
-    onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
-) {
+fun AuthLandingRoute(onEvent: (AuthLandingEvent) -> Unit) {
     AuthLandingScreen(
-        onLoginClick = onLoginClick,
-        onRegisterClick = onRegisterClick
+        onLoginClick = { onEvent(AuthLandingEvent.NavigateToLogin) },
+        onRegisterClick = { onEvent(AuthLandingEvent.NavigateToRegister) }
     )
 }
 
