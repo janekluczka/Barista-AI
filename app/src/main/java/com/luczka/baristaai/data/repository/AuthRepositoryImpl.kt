@@ -1,7 +1,8 @@
 package com.luczka.baristaai.data.repository
 
 import com.luczka.baristaai.data.datasource.SupabaseDataSource
-import com.luczka.baristaai.data.datasource.UnauthorizedException
+import com.luczka.baristaai.data.mapper.toDomain
+import com.luczka.baristaai.data.mapper.toRepositoryError
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.AuthUser
@@ -10,14 +11,9 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
-import io.github.jan.supabase.auth.user.UserInfo
-import io.ktor.client.plugins.ResponseException
-import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
 
 class AuthRepositoryImpl @Inject constructor(
     private val dataSource: SupabaseDataSource
@@ -39,12 +35,12 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val user = dataSource.client.auth.currentUserOrNull()
                 ?: throw IllegalStateException("User not found after sign in.")
-            mapAuthUser(user)
+            user.toDomain()
         }
 
         return result.fold(
             onSuccess = { RepositoryResult.Success(it) },
-            onFailure = { RepositoryResult.Failure(mapThrowableToError(it)) }
+            onFailure = { RepositoryResult.Failure(it.toRepositoryError()) }
         )
     }
 
@@ -62,12 +58,12 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val user = dataSource.client.auth.currentUserOrNull()
                 ?: throw IllegalStateException("User not found after sign in.")
-            mapAuthUser(user)
+            user.toDomain()
         }
 
         return result.fold(
             onSuccess = { RepositoryResult.Success(it) },
-            onFailure = { RepositoryResult.Failure(mapThrowableToError(it)) }
+            onFailure = { RepositoryResult.Failure(it.toRepositoryError()) }
         )
     }
 
@@ -87,12 +83,12 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val user = dataSource.client.auth.currentUserOrNull()
                 ?: throw IllegalStateException("User not found after sign up.")
-            mapAuthUser(user)
+            user.toDomain()
         }
 
         return result.fold(
             onSuccess = { RepositoryResult.Success(it) },
-            onFailure = { RepositoryResult.Failure(mapThrowableToError(it)) }
+            onFailure = { RepositoryResult.Failure(it.toRepositoryError()) }
         )
     }
 
@@ -103,24 +99,24 @@ class AuthRepositoryImpl @Inject constructor(
 
         return result.fold(
             onSuccess = { RepositoryResult.Success(Unit) },
-            onFailure = { RepositoryResult.Failure(mapThrowableToError(it)) }
+            onFailure = { RepositoryResult.Failure(it.toRepositoryError()) }
         )
     }
 
     override suspend fun getCurrentUser(): RepositoryResult<AuthUser?> {
         val result = runCatching {
-            dataSource.client.auth.currentUserOrNull()?.let { mapAuthUser(it) }
+            dataSource.client.auth.currentUserOrNull()?.let { it.toDomain() }
         }
 
         return result.fold(
             onSuccess = { RepositoryResult.Success(it) },
-            onFailure = { RepositoryResult.Failure(mapThrowableToError(it)) }
+            onFailure = { RepositoryResult.Failure(it.toRepositoryError()) }
         )
     }
 
     override fun observeAuthState(): Flow<AuthUser?> {
         return dataSource.client.auth.sessionStatus.map {
-            dataSource.client.auth.currentUserOrNull()?.let { user -> mapAuthUser(user) }
+            dataSource.client.auth.currentUserOrNull()?.let { user -> user.toDomain() }
         }
     }
 
@@ -137,54 +133,4 @@ class AuthRepositoryImpl @Inject constructor(
         return null
     }
 
-    private fun mapAuthUser(user: UserInfo): AuthUser {
-        return AuthUser(
-            id = user.id,
-            email = user.email,
-            displayName = getMetadataString(
-                user,
-                listOf("full_name", "name", "preferred_username")
-            ),
-            avatarUrl = getMetadataString(user, listOf("avatar_url", "picture"))
-        )
-    }
-
-    private fun getMetadataString(
-        user: UserInfo,
-        keys: List<String>
-    ): String? {
-        val metadata = user.userMetadata ?: return null
-        keys.forEach { key ->
-            val element = metadata[key] ?: return@forEach
-            val value = element.jsonPrimitive.contentOrNull
-            if (!value.isNullOrBlank()) {
-                return value
-            }
-        }
-        return null
-    }
-
-    private fun mapThrowableToError(throwable: Throwable): RepositoryError {
-        return when (throwable) {
-            is UnauthorizedException -> RepositoryError.Unauthorized("User is not authenticated.")
-            is IllegalArgumentException -> RepositoryError.Validation(
-                throwable.message ?: "Invalid input."
-            )
-            is ResponseException -> mapResponseError(throwable)
-            is IOException -> RepositoryError.Network("Network error.")
-            else -> RepositoryError.Unknown("Unexpected error.", throwable)
-        }
-    }
-
-    private fun mapResponseError(exception: ResponseException): RepositoryError {
-        val status = exception.response.status.value
-        val message = exception.message ?: "Request failed."
-        return when (status) {
-            400, 422 -> RepositoryError.Validation(message)
-            401, 403 -> RepositoryError.Unauthorized(message)
-            404 -> RepositoryError.NotFound(message)
-            in 500..599 -> RepositoryError.Network("Server error.")
-            else -> RepositoryError.Unknown(message, exception)
-        }
-    }
 }

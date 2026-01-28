@@ -8,6 +8,7 @@ alwaysApply: false
 
 - Implement mappers as extension functions (e.g., `Dto.toDomain()`), not utility classes.
 - Keep mapping logic close to source/target models.
+- Keep mapper extensions in dedicated files named `*Mapper.kt` (e.g., `UserInfoMapper.kt`).
 - Prefer `toDomain()` / `toUi()` / `toData()` naming.
 
 ```kotlin
