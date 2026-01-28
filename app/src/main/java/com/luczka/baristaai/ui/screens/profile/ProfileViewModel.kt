@@ -59,7 +59,7 @@ class ProfileViewModel @Inject constructor(
     private fun confirmLogout() {
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            when (signOutUseCase()) {
+            when (val result = signOutUseCase()) {
                 is RepositoryResult.Success -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     sendEvent(ProfileEvent.NavigateToLogin)

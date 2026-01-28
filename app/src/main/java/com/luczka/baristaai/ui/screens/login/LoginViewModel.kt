@@ -104,7 +104,10 @@ class LoginViewModel @Inject constructor(
     private fun handleError(error: RepositoryError) {
         val (emailError, passwordError, message) = when (error) {
             is RepositoryError.Validation -> mapValidationError(error.message)
-            else -> Triple(null, null, error.message)
+            is RepositoryError.Network -> Triple(null, null, error.message)
+            is RepositoryError.Unauthorized -> Triple(null, null, error.message)
+            is RepositoryError.NotFound -> Triple(null, null, error.message)
+            is RepositoryError.Unknown -> Triple(null, null, error.message)
         }
         val fallbackMessage = mapFallbackMessage(error)
 
