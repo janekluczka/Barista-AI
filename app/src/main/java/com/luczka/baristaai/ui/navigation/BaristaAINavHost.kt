@@ -1,13 +1,22 @@
 package com.luczka.baristaai.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.luczka.baristaai.ui.screens.auth.AuthLandingEvent
-import com.luczka.baristaai.ui.screens.auth.AuthLandingRoute
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.screens.login.LoginEvent
+import com.luczka.baristaai.ui.screens.login.LoginRoute
+import com.luczka.baristaai.ui.screens.register.RegisterEvent
+import com.luczka.baristaai.ui.screens.register.RegisterRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
@@ -18,25 +27,62 @@ fun BaristaAINavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val authStateViewModel: AuthStateViewModel = hiltViewModel()
+    val authState by authStateViewModel.uiState.collectAsState()
+
+    if (authState.isLoading) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val startDestination = if (authState.isAuthenticated) {
+        Graph.App
+    } else {
+        Graph.Auth
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Graph.App,
+        startDestination = startDestination,
         modifier = modifier
     ) {
-        navigation<Graph.Auth>(startDestination = Route.AuthLanding) {
-            composable<Route.AuthLanding> {
-                AuthLandingRoute { event ->
+        navigation<Graph.Auth>(startDestination = Route.Login) {
+            composable<Route.Login> {
+                LoginRoute { event ->
                     when (event) {
-                        AuthLandingEvent.NavigateToLogin -> navController.navigate(Route.Login)
-                        AuthLandingEvent.NavigateToRegister -> navController.navigate(Route.Register)
+                        LoginEvent.NavigateToRegister -> navController.navigate(Route.Register)
+                        LoginEvent.NavigateToHome -> {
+                            navController.navigate(Route.Home) {
+                                popUpTo<Graph.Auth> {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                        LoginEvent.RequestGoogleSignIn -> Unit
+                        is LoginEvent.ShowError -> Unit
                     }
                 }
             }
 
-            composable<Route.Login> {
-            }
-
             composable<Route.Register> {
+                RegisterRoute { event ->
+                    when (event) {
+                        RegisterEvent.NavigateToLogin -> navController.navigate(Route.Login)
+                        RegisterEvent.NavigateToHome -> {
+                            navController.navigate(Route.Home) {
+                                popUpTo<Graph.Auth> {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                        is RegisterEvent.ShowError -> Unit
+                    }
+                }
             }
         }
 
@@ -73,8 +119,8 @@ fun BaristaAINavHost(
                     onEvent = { event ->
                         when (event) {
                             ProfileEvent.NavigateBack -> navController.popBackStack()
-                            ProfileEvent.NavigateToAuthLanding -> {
-                                navController.navigate(Route.AuthLanding) {
+                            ProfileEvent.NavigateToLogin -> {
+                                navController.navigate(Route.Login) {
                                     popUpTo<Route.Home> {
                                         inclusive = true
                                     }

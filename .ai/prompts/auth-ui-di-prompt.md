@@ -18,9 +18,9 @@ Zakres prac:
    - LoginAction/Event/UiState/ViewModel/Screen
    - RegisterAction/Event/UiState/ViewModel/Screen
 2) Podlacz nawigacje:
-   - AuthLanding -> Login/Register
+   - Login <-> Register (przelaczanie ekranow)
    - po sukcesie: wyczysc backstack i przejdz do Home
-3) Dodaj zarzadzanie stanem sesji (start destination zalezne od zalogowania).
+3) Dodaj zarzadzanie stanem sesji (start destination: login, jesli brak sesji).
 4) Zaktualizuj Profile (wyswietl email, dodaj wylogowanie).
 5) Dodaj bindy Hilt dla repo/use-case (UI ma dostac ViewModel z DI).
 6) Dodaj obsluge bledow (snackbar/toast) i loading state.

@@ -5,7 +5,7 @@ Parzenie kawy alternatywnej (V60, Chemex, Aeropress, Moka) jest trudne, szczegó
 - Generowanie przepisów kawowych na podstawie wprowadzonego tekstu .
 - Manualne wprowadzanie przepisu.
 - Przeglądanie, edycja i usuwanie przepisu.
-- Prosty system kont użytkowników do przechowywania przepisów
+- Prosty system kont użytkowników do przechowywania przepisów (email+hasło, Google Sign-In)
 
 ### Co NIE wchodzi w zakres MVP
 - Zapisywanie ziaren kawy powiązanych z przepisem

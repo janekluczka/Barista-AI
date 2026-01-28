@@ -41,6 +41,11 @@ android {
             name = "SUPABASE_ANON_KEY",
             value = "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\""
         )
+        buildConfigField(
+            type = "String",
+            name = "GOOGLE_WEB_CLIENT_ID",
+            value = "\"${localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\""
+        )
     }
 
     buildTypes {
@@ -78,6 +83,7 @@ dependencies {
     implementation(libs.supabase.auth.kt)
     implementation(libs.supabase.postgrest.kt)
     implementation(libs.ktor.client.android)
+    implementation(libs.play.services.auth)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.navigation.compose)

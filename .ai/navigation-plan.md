@@ -9,7 +9,6 @@
 - Draft retention is ambiguous in docs; treat drafts as transient unless persisted.
 
 ## 2. Screen List
-- AuthLanding: choose login or register; actions: go to Login, go to Register; dependencies: none
 - Login: email/password and Google Sign-In; actions: sign in, switch to Register; dependencies: Supabase Auth
 - Register: email/password; actions: sign up, switch to Login; dependencies: Supabase Auth
 - Home (Recipes): saved recipes list with filters at top; actions: open recipe, apply filters, open profile, FAB to Generate or Manual; dependencies: saved recipes query
@@ -20,19 +19,18 @@
 - Profile: show account info; actions: logout; dependencies: auth session
 
 ## 3. Navigation Map
-- Auth flow: AuthLanding -> Login -> (success) Home; AuthLanding -> Register -> (success) Home
+- Auth flow: Login -> (success) Home; Login -> Register; Register -> (success) Home; Register -> Login
 - Generate flow: Home -> GenerateRecipe -> GeneratedRecipes (after successful generation) -> EditRecipe (optional) -> Home (after save)
 - Accept draft: GeneratedRecipes -> Home (on accept) with success message
 - Reject draft: GeneratedRecipes -> stay, remove card, show toast
 - Manual create: Home -> EditRecipe (mode=manual) -> (confirm similar) -> Home
 - Saved list flow: Home -> RecipeDetail -> EditRecipe -> Home
 - Delete: RecipeDetail or Home -> confirm dialog -> Home
-- Logout: Profile -> AuthLanding
+- Logout: Profile -> Login
 
 ## 4. Routes and Arguments
-- auth_landing (entry, unauthenticated)
-- login (source: AuthLanding)
-- register (source: AuthLanding)
+- login (entry, unauthenticated)
+- register (source: Login)
 - home (entry, authenticated)
 - generate_recipe (source: Home)
 - generated_recipes(requestId: String) (source: GenerateRecipe)
@@ -41,11 +39,11 @@
 - profile (source: Home)
 
 ## 5. Entry Points
-- Start destination: auth_landing if no session; else home
+- Start destination: login if no session; else home
 - Guards:
 - If offline, block generation and saving; show offline dialog and stay on current screen
 - If a recipe id is missing or invalid, fall back to home with error toast
-- If session expires, redirect to auth_landing and clear back stack
+- If session expires, redirect to login and clear back stack
 
 ## 6. One-off Effects and Dialogs
 - Offline dialog: when user attempts generation or save while offline
