@@ -33,10 +33,12 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
         val result = runCatching {
-            val user = dataSource.client.auth.signInWith(Email) {
+            dataSource.client.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
+            val user = dataSource.client.auth.currentUserOrNull()
+                ?: throw IllegalStateException("User not found after sign in.")
             mapAuthUser(user)
         }
 
@@ -54,10 +56,12 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
         val result = runCatching {
-            val user = dataSource.client.auth.signInWith(IDToken) {
+            dataSource.client.auth.signInWith(IDToken) {
                 this.idToken = idToken
                 provider = Google
             }
+            val user = dataSource.client.auth.currentUserOrNull()
+                ?: throw IllegalStateException("User not found after sign in.")
             mapAuthUser(user)
         }
 
@@ -77,10 +81,12 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
         val result = runCatching {
-            val user = dataSource.client.auth.signUpWith(Email) {
+            dataSource.client.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
+            val user = dataSource.client.auth.currentUserOrNull()
+                ?: throw IllegalStateException("User not found after sign up.")
             mapAuthUser(user)
         }
 
@@ -165,7 +171,7 @@ class AuthRepositoryImpl @Inject constructor(
                 throwable.message ?: "Invalid input."
             )
             is ResponseException -> mapResponseError(throwable)
-            is IOException -> RepositoryError.Network("Network error.", throwable)
+            is IOException -> RepositoryError.Network("Network error.")
             else -> RepositoryError.Unknown("Unexpected error.", throwable)
         }
     }
@@ -177,7 +183,7 @@ class AuthRepositoryImpl @Inject constructor(
             400, 422 -> RepositoryError.Validation(message)
             401, 403 -> RepositoryError.Unauthorized(message)
             404 -> RepositoryError.NotFound(message)
-            in 500..599 -> RepositoryError.Network("Server error.", exception)
+            in 500..599 -> RepositoryError.Network("Server error.")
             else -> RepositoryError.Unknown(message, exception)
         }
     }
