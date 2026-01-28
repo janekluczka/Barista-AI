@@ -1,0 +1,27 @@
+---
+description: Mappers as Kotlin extension functions
+globs: app/src/main/java/com/luczka/baristaai/data/**/*.kt app/src/main/java/com/luczka/baristaai/domain/**/*.kt app/src/main/java/com/luczka/baristaai/ui/**/*.kt
+alwaysApply: false
+---
+
+# Mapper Extensions
+
+- Implement mappers as extension functions (e.g., `Dto.toDomain()`), not utility classes.
+- Keep mapping logic close to source/target models.
+- Prefer `toDomain()` / `toUi()` / `toData()` naming.
+
+```kotlin
+// ✅ GOOD
+fun RecipeDto.toDomain(): Recipe = Recipe(
+    id = id,
+    name = name
+)
+
+// ❌ BAD
+object RecipeMapper {
+    fun toDomain(dto: RecipeDto): Recipe = Recipe(
+        id = dto.id,
+        name = dto.name
+    )
+}
+```
