@@ -15,7 +15,7 @@ import com.luczka.baristaai.domain.model.PageRequest
 import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.model.UpdateGenerationRequest
 import com.luczka.baristaai.domain.repository.GenerationRequestsRepository
-import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.from
 import javax.inject.Inject
 
 class GenerationRequestsRepositoryImpl @Inject constructor(
@@ -45,9 +45,10 @@ class GenerationRequestsRepositoryImpl @Inject constructor(
     ): RepositoryResult<GenerationRequest> {
         // TODO: Replace this insert with Edge Function generation call.
         val result = runCatching {
-            val payload = input.toPayload(dataSource.currentUserId())
+            val userId = dataSource.currentUserId()
+            val payload = input.toPayload(userId)
             dataSource.client
-                .postgrest["generation_requests"]
+                .from("generation_requests")
                 .insert(payload) {
                     select()
                 }

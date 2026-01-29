@@ -3,12 +3,13 @@ package com.luczka.baristaai.data.repository
 import android.util.Log
 import com.luczka.baristaai.data.datasource.SupabaseDataSource
 import com.luczka.baristaai.data.mapper.toDomain
+import com.luczka.baristaai.data.mapper.toRepositoryError
 import com.luczka.baristaai.data.models.BrewMethodDto
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.BrewMethod
 import com.luczka.baristaai.domain.repository.BrewMethodsRepository
-import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.from
 import javax.inject.Inject
 
 class BrewMethodsRepositoryImpl @Inject constructor(
@@ -21,7 +22,7 @@ class BrewMethodsRepositoryImpl @Inject constructor(
         }
         val result = runCatching {
             dataSource.client
-                .postgrest["brew_methods"]
+                .from("brew_methods")
                 .select()
                 .decodeList<BrewMethodDto>()
                 .map { it.toDomain() }
@@ -34,9 +35,7 @@ class BrewMethodsRepositoryImpl @Inject constructor(
             },
             onFailure = {
                 Log.e(TAG, "Failed to load brew methods.", it)
-                RepositoryResult.Failure(
-                    RepositoryError.Unknown("Failed to load brew methods.", it)
-                )
+                RepositoryResult.Failure(it.toRepositoryError())
             }
         )
     }
