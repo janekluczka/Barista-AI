@@ -4,6 +4,9 @@ sealed interface HomeAction {
     data object LoadRecipes : HomeAction
     data class SelectFilter(val filterId: String?) : HomeAction
     data object OpenProfile : HomeAction
+    data object OpenAddOptions : HomeAction
+    data object DismissAddOptions : HomeAction
     data object OpenGenerate : HomeAction
+    data object OpenManual : HomeAction
     data class OpenRecipeDetail(val recipeId: String) : HomeAction
 }

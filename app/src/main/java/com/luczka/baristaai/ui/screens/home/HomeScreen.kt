@@ -1,6 +1,7 @@
 package com.luczka.baristaai.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +27,15 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -101,10 +105,10 @@ fun HomeScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onAction(HomeAction.OpenGenerate) }) {
+            FloatingActionButton(onClick = { onAction(HomeAction.OpenAddOptions) }) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Generate recipe"
+                    contentDescription = "Add recipe"
                 )
             }
         }
@@ -150,6 +154,35 @@ fun HomeScreen(
                     onAction(HomeAction.OpenRecipeDetail(recipeId))
                 }
             )
+        }
+    }
+
+    if (uiState.isAddOptionSheetVisible) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { onAction(HomeAction.DismissAddOptions) },
+            sheetState = sheetState
+        ) {
+            Text(
+                text = "Add recipe",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            )
+            ListItem(
+                headlineContent = { Text(text = "AI assisted") },
+                supportingContent = { Text(text = "Generate recipe with AI") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onAction(HomeAction.OpenGenerate) }
+            )
+            ListItem(
+                headlineContent = { Text(text = "Manual") },
+                supportingContent = { Text(text = "Create recipe by hand") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onAction(HomeAction.OpenManual) }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

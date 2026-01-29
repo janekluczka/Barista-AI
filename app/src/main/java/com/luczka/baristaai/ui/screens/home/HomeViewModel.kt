@@ -33,7 +33,10 @@ class HomeViewModel @Inject constructor(
             HomeAction.LoadRecipes -> loadRecipes()
             is HomeAction.SelectFilter -> selectFilter(action.filterId)
             HomeAction.OpenProfile -> sendEvent(HomeEvent.NavigateToProfile)
-            HomeAction.OpenGenerate -> sendEvent(HomeEvent.NavigateToGenerate)
+            HomeAction.OpenAddOptions -> updateState { it.copy(isAddOptionSheetVisible = true) }
+            HomeAction.DismissAddOptions -> updateState { it.copy(isAddOptionSheetVisible = false) }
+            HomeAction.OpenGenerate -> openGenerate()
+            HomeAction.OpenManual -> openManual()
             is HomeAction.OpenRecipeDetail -> sendEvent(
                 HomeEvent.NavigateToRecipeDetail(action.recipeId)
             )
@@ -72,6 +75,16 @@ class HomeViewModel @Inject constructor(
         )
     }
 
+    private fun openGenerate() {
+        updateState { it.copy(isAddOptionSheetVisible = false) }
+        sendEvent(HomeEvent.NavigateToGenerate)
+    }
+
+    private fun openManual() {
+        updateState { it.copy(isAddOptionSheetVisible = false) }
+        sendEvent(HomeEvent.NavigateToManual)
+    }
+
     private fun sendEvent(event: HomeEvent) {
         viewModelScope.launch {
             _event.emit(event)
@@ -84,6 +97,10 @@ class HomeViewModel @Inject constructor(
             errorMessage = message
         )
         sendEvent(HomeEvent.ShowError(message))
+    }
+
+    private fun updateState(reducer: (HomeUiState) -> HomeUiState) {
+        _uiState.value = reducer(_uiState.value)
     }
 
     private fun buildFilters(methods: List<BrewMethod>): List<FilterUiState> {

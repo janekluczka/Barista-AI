@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import com.luczka.baristaai.ui.screens.edit.EditRecipeEvent
+import com.luczka.baristaai.ui.screens.edit.EditRecipeRoute
 import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesEvent
 import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesRoute
 import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
@@ -80,6 +82,9 @@ fun BaristaAINavHost(
                         when (event) {
                             HomeEvent.NavigateToProfile -> navController.navigate(Route.Profile)
                             HomeEvent.NavigateToGenerate -> navController.navigate(Route.GenerateRecipe)
+                            HomeEvent.NavigateToManual -> navController.navigate(
+                                Route.EditRecipe(mode = EditRecipeMode.MANUAL)
+                            )
                             is HomeEvent.NavigateToRecipeDetail -> navController.navigate(
                                 Route.RecipeDetail(recipeId = event.recipeId)
                             )
@@ -124,6 +129,20 @@ fun BaristaAINavHost(
             }
 
             composable<Route.EditRecipe> {
+                EditRecipeRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            EditRecipeEvent.NavigateBack -> navController.popBackStack()
+                            EditRecipeEvent.NavigateToHome -> navController.navigate(Route.Home) {
+                                popUpTo<Route.Home> {
+                                    inclusive = true
+                                }
+                            }
+                            is EditRecipeEvent.ShowError -> Unit
+                            is EditRecipeEvent.ShowMessage -> Unit
+                        }
+                    }
+                )
             }
 
             composable<Route.RecipeDetail> {

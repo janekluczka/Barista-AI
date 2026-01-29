@@ -5,5 +5,6 @@ data class HomeUiState(
     val filters: List<FilterUiState> = emptyList(),
     val selectedFilterId: String? = null,
     val recipes: List<RecipeUiState> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isAddOptionSheetVisible: Boolean = false
 )
