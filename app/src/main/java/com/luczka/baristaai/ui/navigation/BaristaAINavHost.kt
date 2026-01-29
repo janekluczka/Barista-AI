@@ -6,6 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import androidx.navigation.toRoute
+import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesEvent
+import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesRoute
+import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
+import com.luczka.baristaai.ui.screens.generate.GenerateRecipeRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
 import com.luczka.baristaai.ui.screens.login.LoginEvent
@@ -85,9 +90,37 @@ fun BaristaAINavHost(
             }
 
             composable<Route.GenerateRecipe> {
+                GenerateRecipeRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            GenerateRecipeEvent.NavigateBack -> navController.popBackStack()
+                            is GenerateRecipeEvent.NavigateToGeneratedRecipes -> navController.navigate(
+                                Route.GeneratedRecipes(requestId = event.requestId)
+                            )
+                            is GenerateRecipeEvent.ShowError -> Unit
+                        }
+                    }
+                )
             }
 
             composable<Route.GeneratedRecipes> {
+                val route = it.toRoute<Route.GeneratedRecipes>()
+                GeneratedRecipesRoute(
+                    requestId = route.requestId,
+                    onEvent = { event ->
+                        when (event) {
+                            GeneratedRecipesEvent.NavigateBack -> navController.popBackStack()
+                            is GeneratedRecipesEvent.NavigateToEditRecipe -> navController.navigate(
+                                Route.EditRecipe(
+                                    mode = EditRecipeMode.DRAFT,
+                                    recipeId = event.recipeId,
+                                    requestId = route.requestId
+                                )
+                            )
+                            is GeneratedRecipesEvent.ShowMessage -> Unit
+                        }
+                    }
+                )
             }
 
             composable<Route.EditRecipe> {

@@ -1,6 +1,11 @@
 package com.luczka.baristaai.data.repository
 
+import android.util.Log
 import com.luczka.baristaai.data.datasource.SupabaseDataSource
+import com.luczka.baristaai.data.mapper.toDomain
+import com.luczka.baristaai.data.mapper.toPayload
+import com.luczka.baristaai.data.mapper.toRepositoryError
+import com.luczka.baristaai.data.models.GenerationRequestDto
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.CreateGenerationRequest
@@ -10,6 +15,7 @@ import com.luczka.baristaai.domain.model.PageRequest
 import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.model.UpdateGenerationRequest
 import com.luczka.baristaai.domain.repository.GenerationRequestsRepository
+import io.github.jan.supabase.postgrest.postgrest
 import javax.inject.Inject
 
 class GenerationRequestsRepositoryImpl @Inject constructor(
@@ -37,9 +43,24 @@ class GenerationRequestsRepositoryImpl @Inject constructor(
     override suspend fun createGenerationRequest(
         input: CreateGenerationRequest
     ): RepositoryResult<GenerationRequest> {
-        // TODO: Implement Supabase insert for generation request.
-        return RepositoryResult.Failure(
-            RepositoryError.Unknown("Not implemented yet.")
+        // TODO: Replace this insert with Edge Function generation call.
+        val result = runCatching {
+            val payload = input.toPayload(dataSource.currentUserId())
+            dataSource.client
+                .postgrest["generation_requests"]
+                .insert(payload) {
+                    select()
+                }
+                .decodeSingle<GenerationRequestDto>()
+                .toDomain()
+        }
+
+        return result.fold(
+            onSuccess = { RepositoryResult.Success(it) },
+            onFailure = {
+                Log.e(TAG, "Failed to create generation request.", it)
+                RepositoryResult.Failure(it.toRepositoryError())
+            }
         )
     }
 
@@ -58,5 +79,9 @@ class GenerationRequestsRepositoryImpl @Inject constructor(
         return RepositoryResult.Failure(
             RepositoryError.Unknown("Not implemented yet.")
         )
+    }
+
+    private companion object {
+        const val TAG: String = "GenerationRequestsRepository"
     }
 }

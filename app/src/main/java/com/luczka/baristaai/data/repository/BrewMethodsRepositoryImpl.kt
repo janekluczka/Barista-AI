@@ -16,6 +16,9 @@ class BrewMethodsRepositoryImpl @Inject constructor(
 ) : BrewMethodsRepository {
 
     override suspend fun listBrewMethods(): RepositoryResult<List<BrewMethod>> {
+        if (cachedMethods.isNotEmpty()) {
+            return RepositoryResult.Success(cachedMethods)
+        }
         val result = runCatching {
             dataSource.client
                 .postgrest["brew_methods"]
@@ -25,7 +28,10 @@ class BrewMethodsRepositoryImpl @Inject constructor(
         }
 
         return result.fold(
-            onSuccess = { RepositoryResult.Success(it) },
+            onSuccess = {
+                cachedMethods = it
+                RepositoryResult.Success(it)
+            },
             onFailure = {
                 Log.e(TAG, "Failed to load brew methods.", it)
                 RepositoryResult.Failure(
@@ -52,4 +58,6 @@ class BrewMethodsRepositoryImpl @Inject constructor(
     private companion object {
         const val TAG: String = "BrewMethodsRepository"
     }
+
+    private var cachedMethods: List<BrewMethod> = emptyList()
 }
