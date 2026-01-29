@@ -6,14 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.luczka.baristaai.ui.screens.login.LoginEvent
-import com.luczka.baristaai.ui.screens.login.LoginRoute
-import com.luczka.baristaai.ui.screens.register.RegisterEvent
-import com.luczka.baristaai.ui.screens.register.RegisterRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
+import com.luczka.baristaai.ui.screens.login.LoginEvent
+import com.luczka.baristaai.ui.screens.login.LoginRoute
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileRoute
+import com.luczka.baristaai.ui.screens.register.RegisterEvent
+import com.luczka.baristaai.ui.screens.register.RegisterRoute
 
 @Composable
 fun BaristaAINavHost(
@@ -61,6 +61,7 @@ fun BaristaAINavHost(
                                 }
                             }
                         }
+                        RegisterEvent.RequestGoogleSignIn -> Unit
                         is RegisterEvent.ShowError -> Unit
                     }
                 }

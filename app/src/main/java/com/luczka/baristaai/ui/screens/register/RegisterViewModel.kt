@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
+import com.luczka.baristaai.domain.usecase.SignInWithGoogleUseCase
 import com.luczka.baristaai.domain.usecase.SignUpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val signUpUseCase: SignUpUseCase
+    private val signUpUseCase: SignUpUseCase,
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<RegisterUiState> = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState
@@ -28,7 +30,11 @@ class RegisterViewModel @Inject constructor(
         when (action) {
             is RegisterAction.UpdateEmail -> updateEmail(action.email)
             is RegisterAction.UpdatePassword -> updatePassword(action.password)
+            is RegisterAction.UpdateConfirmPassword -> updateConfirmPassword(action.confirmPassword)
             RegisterAction.SubmitRegister -> submitRegister()
+            RegisterAction.RequestGoogleSignIn -> sendEvent(RegisterEvent.RequestGoogleSignIn)
+            is RegisterAction.SubmitGoogleSignIn -> submitGoogleSignIn(action.idToken)
+            is RegisterAction.ReportGoogleSignInFailure -> reportGoogleSignInFailure(action.message)
             RegisterAction.NavigateToLogin -> sendEvent(RegisterEvent.NavigateToLogin)
         }
     }
@@ -43,7 +49,15 @@ class RegisterViewModel @Inject constructor(
     private fun updatePassword(password: String) {
         _uiState.value = _uiState.value.copy(
             password = password,
-            passwordError = null
+            passwordError = null,
+            confirmPasswordError = null
+        )
+    }
+
+    private fun updateConfirmPassword(confirmPassword: String) {
+        _uiState.value = _uiState.value.copy(
+            confirmPassword = confirmPassword,
+            confirmPasswordError = null
         )
     }
 
@@ -51,10 +65,23 @@ class RegisterViewModel @Inject constructor(
         if (_uiState.value.isLoading) {
             return
         }
+        val confirmError = validateConfirmPassword(
+            _uiState.value.password,
+            _uiState.value.confirmPassword
+        )
+        if (confirmError != null) {
+            _uiState.value = _uiState.value.copy(
+                passwordError = confirmError,
+                confirmPasswordError = confirmError
+            )
+            sendEvent(RegisterEvent.ShowError(confirmError))
+            return
+        }
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             emailError = null,
-            passwordError = null
+            passwordError = null,
+            confirmPasswordError = null
         )
 
         viewModelScope.launch {
@@ -65,6 +92,35 @@ class RegisterViewModel @Inject constructor(
                 }
                 is RepositoryResult.Failure -> handleError(result.error)
             }
+        }
+    }
+
+    private fun submitGoogleSignIn(idToken: String) {
+        if (_uiState.value.isLoading) {
+            return
+        }
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            emailError = null,
+            passwordError = null,
+            confirmPasswordError = null
+        )
+
+        viewModelScope.launch {
+            when (val result = signInWithGoogleUseCase(idToken)) {
+                is RepositoryResult.Success -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    sendEvent(RegisterEvent.NavigateToHome)
+                }
+                is RepositoryResult.Failure -> handleError(result.error)
+            }
+        }
+    }
+
+    private fun reportGoogleSignInFailure(message: String) {
+        _uiState.value = _uiState.value.copy(isLoading = false)
+        if (message.isNotBlank()) {
+            sendEvent(RegisterEvent.ShowError(message))
         }
     }
 
@@ -81,7 +137,8 @@ class RegisterViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             emailError = emailError,
-            passwordError = passwordError
+            passwordError = passwordError,
+            confirmPasswordError = null
         )
 
         val messageToShow = message?.takeIf { it.isNotBlank() } ?: fallbackMessage
@@ -95,6 +152,16 @@ class RegisterViewModel @Inject constructor(
         val passwordError = if (message.contains("Password", ignoreCase = true)) message else null
         val generalError = if (emailError == null && passwordError == null) message else null
         return Triple(emailError, passwordError, generalError)
+    }
+
+    private fun validateConfirmPassword(password: String, confirmPassword: String): String? {
+        if (confirmPassword.isBlank()) {
+            return "Confirm your password."
+        }
+        if (password != confirmPassword) {
+            return "Passwords do not match."
+        }
+        return null
     }
 
     private fun mapFallbackMessage(error: RepositoryError): String? {
