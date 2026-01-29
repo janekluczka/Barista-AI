@@ -1,7 +1,12 @@
 package com.luczka.baristaai.ui.screens.generated
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.luczka.baristaai.domain.error.RepositoryResult
+import com.luczka.baristaai.domain.model.CreateRecipeActionLogModel
+import com.luczka.baristaai.domain.model.RecipeActionModel
+import com.luczka.baristaai.domain.usecase.CreateRecipeActionLogUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,7 +17,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class GeneratedRecipesViewModel @Inject constructor() : ViewModel() {
+class GeneratedRecipesViewModel @Inject constructor(
+    private val createRecipeActionLogUseCase: CreateRecipeActionLogUseCase
+) : ViewModel() {
     private val _uiState: MutableStateFlow<GeneratedRecipesUiState> =
         MutableStateFlow(GeneratedRecipesUiState())
     val uiState: StateFlow<GeneratedRecipesUiState> = _uiState
@@ -49,15 +56,21 @@ class GeneratedRecipesViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun acceptRecipe(recipeId: String) {
-        // TODO: Persist accepted recipe and log action.
-        sendEvent(GeneratedRecipesEvent.ShowMessage("Recipe accepted."))
+        // TODO: Persist accepted recipe.
+        viewModelScope.launch {
+            logRecipeAction(recipeId, RecipeActionModel.Accepted)
+            sendEvent(GeneratedRecipesEvent.ShowMessage("Recipe accepted."))
+        }
     }
 
     private fun rejectRecipe(recipeId: String) {
         updateState { state ->
             state.copy(recipes = state.recipes.filterNot { it.id == recipeId })
         }
-        sendEvent(GeneratedRecipesEvent.ShowMessage("Recipe rejected."))
+        viewModelScope.launch {
+            logRecipeAction(recipeId, RecipeActionModel.Rejected)
+            sendEvent(GeneratedRecipesEvent.ShowMessage("Recipe rejected."))
+        }
     }
 
     private fun editRecipe(recipeId: String) {
@@ -72,5 +85,23 @@ class GeneratedRecipesViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _event.emit(event)
         }
+    }
+
+    private suspend fun logRecipeAction(recipeId: String, action: RecipeActionModel) {
+        val requestId = _uiState.value.requestId ?: return
+        val result = createRecipeActionLogUseCase(
+            CreateRecipeActionLogModel(
+                recipeId = recipeId,
+                generationRequestId = requestId,
+                action = action
+            )
+        )
+        if (result is RepositoryResult.Failure) {
+            Log.e(TAG, "Failed to log recipe action: ${result.error}")
+        }
+    }
+
+    private companion object {
+        const val TAG: String = "GeneratedRecipesViewModel"
     }
 }

@@ -1,5 +1,6 @@
 package com.luczka.baristaai.ui.screens.edit
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,9 +8,12 @@ import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.BrewMethod
 import com.luczka.baristaai.domain.model.CreateRecipe
+import com.luczka.baristaai.domain.model.CreateRecipeActionLogModel
 import com.luczka.baristaai.domain.model.Recipe
+import com.luczka.baristaai.domain.model.RecipeActionModel
 import com.luczka.baristaai.domain.model.RecipeStatus
 import com.luczka.baristaai.domain.model.UpdateRecipe
+import com.luczka.baristaai.domain.usecase.CreateRecipeActionLogUseCase
 import com.luczka.baristaai.domain.usecase.GetRecipeUseCase
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
 import com.luczka.baristaai.domain.usecase.CreateRecipeUseCase
@@ -31,7 +35,8 @@ class EditRecipeViewModel @Inject constructor(
     private val listBrewMethodsUseCase: ListBrewMethodsUseCase,
     private val getRecipeUseCase: GetRecipeUseCase,
     private val createRecipeUseCase: CreateRecipeUseCase,
-    private val updateRecipeUseCase: UpdateRecipeUseCase
+    private val updateRecipeUseCase: UpdateRecipeUseCase,
+    private val createRecipeActionLogUseCase: CreateRecipeActionLogUseCase
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<EditRecipeUiState> = MutableStateFlow(EditRecipeUiState())
     val uiState: StateFlow<EditRecipeUiState> = _uiState
@@ -426,14 +431,42 @@ class EditRecipeViewModel @Inject constructor(
         handleRepositoryResult(updateRecipeUseCase(recipeId, input))
     }
 
-    private fun handleRepositoryResult(result: RepositoryResult<*>) {
+    private fun handleRepositoryResult(result: RepositoryResult<Recipe>) {
         when (result) {
             is RepositoryResult.Success -> {
                 updateState { it.copy(isLoading = false) }
+                val action = resolveRecipeAction()
+                if (action != null) {
+                    viewModelScope.launch {
+                        logRecipeAction(result.value.id, action)
+                    }
+                }
                 sendEvent(EditRecipeEvent.ShowMessage("Recipe saved."))
                 sendEvent(EditRecipeEvent.NavigateToHome)
             }
             is RepositoryResult.Failure -> showError(resolveErrorMessage(result.error))
+        }
+    }
+
+    private fun resolveRecipeAction(): RecipeActionModel? {
+        return when (_uiState.value.mode) {
+            EditRecipeMode.DRAFT -> RecipeActionModel.Edited
+            EditRecipeMode.MANUAL -> null
+            EditRecipeMode.SAVED -> null
+        }
+    }
+
+    private suspend fun logRecipeAction(recipeId: String, action: RecipeActionModel) {
+        val requestId = _uiState.value.requestId ?: return
+        val result = createRecipeActionLogUseCase(
+            CreateRecipeActionLogModel(
+                recipeId = recipeId,
+                generationRequestId = requestId,
+                action = action
+            )
+        )
+        if (result is RepositoryResult.Failure) {
+            Log.e(TAG, "Failed to log recipe action: ${result.error}")
         }
     }
 
@@ -459,6 +492,10 @@ class EditRecipeViewModel @Inject constructor(
         viewModelScope.launch {
             _event.emit(event)
         }
+    }
+
+    private companion object {
+        const val TAG: String = "EditRecipeViewModel"
     }
 
     private data class ValidationResult(
