@@ -2,15 +2,23 @@ package com.luczka.baristaai.ui.screens.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -28,9 +36,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -41,6 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
+import com.luczka.baristaai.R
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -130,12 +141,12 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Log in",
+                text = "Welcome to BaristaAI",
                 style = MaterialTheme.typography.headlineSmall
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Sign in to access your recipes.",
+                text = "Your guide for daily brews.",
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -155,6 +166,7 @@ fun LoginScreen(
                     imeAction = ImeAction.Next
                 )
             )
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = { onAction(LoginAction.UpdatePassword(it)) },
@@ -166,7 +178,29 @@ fun LoginScreen(
                         Text(text = uiState.passwordError)
                     }
                 },
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (uiState.isPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                trailingIcon = {
+                    val icon = if (uiState.isPasswordVisible) {
+                        Icons.Default.VisibilityOff
+                    } else {
+                        Icons.Default.Visibility
+                    }
+                    val description = if (uiState.isPasswordVisible) {
+                        "Hide password"
+                    } else {
+                        "Show password"
+                    }
+                    IconButton(onClick = { onAction(LoginAction.TogglePasswordVisibility) }) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = description
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -197,14 +231,23 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading
             ) {
-                Text(text = "Continue with Google")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google),
+                    contentDescription = "Google",
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Sign in with Google")
             }
             Spacer(modifier = Modifier.height(16.dp))
-            TextButton(
-                onClick = { onAction(LoginAction.NavigateToRegister) },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Don't have an account? Create one")
+                Text(text = "Don't have an account?")
+                TextButton(onClick = { onAction(LoginAction.NavigateToRegister) }) {
+                    Text(text = "Create one")
+                }
             }
         }
     }

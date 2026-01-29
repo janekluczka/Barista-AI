@@ -30,6 +30,7 @@ class LoginViewModel @Inject constructor(
         when (action) {
             is LoginAction.UpdateEmail -> updateEmail(action.email)
             is LoginAction.UpdatePassword -> updatePassword(action.password)
+            LoginAction.TogglePasswordVisibility -> togglePasswordVisibility()
             LoginAction.SubmitLogin -> submitLogin()
             LoginAction.RequestGoogleSignIn -> sendEvent(LoginEvent.RequestGoogleSignIn)
             is LoginAction.SubmitGoogleSignIn -> submitGoogleSignIn(action.idToken)
@@ -52,6 +53,12 @@ class LoginViewModel @Inject constructor(
         )
     }
 
+    private fun togglePasswordVisibility() {
+        _uiState.value = _uiState.value.copy(
+            isPasswordVisible = !_uiState.value.isPasswordVisible
+        )
+    }
+
     private fun submitLogin() {
         if (_uiState.value.isLoading) {
             return
@@ -59,7 +66,8 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             emailError = null,
-            passwordError = null
+            passwordError = null,
+            isPasswordVisible = false
         )
 
         viewModelScope.launch {
@@ -80,7 +88,8 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             emailError = null,
-            passwordError = null
+            passwordError = null,
+            isPasswordVisible = false
         )
 
         viewModelScope.launch {
@@ -114,7 +123,8 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             emailError = emailError,
-            passwordError = passwordError
+            passwordError = passwordError,
+            isPasswordVisible = false
         )
 
         val messageToShow = message?.takeIf { it.isNotBlank() } ?: fallbackMessage
