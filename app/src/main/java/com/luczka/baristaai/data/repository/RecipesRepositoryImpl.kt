@@ -6,6 +6,7 @@ import com.luczka.baristaai.data.mapper.toCommand
 import com.luczka.baristaai.data.mapper.toDomain
 import com.luczka.baristaai.data.mapper.toDto
 import com.luczka.baristaai.data.mapper.toPayload
+import com.luczka.baristaai.data.mapper.toQueryValue
 import com.luczka.baristaai.data.mapper.toRepositoryError
 import com.luczka.baristaai.data.models.RecipeDto
 import com.luczka.baristaai.domain.error.RepositoryError
@@ -46,12 +47,12 @@ class RecipesRepositoryImpl @Inject constructor(
                     filter {
                         filter.brewMethodId?.let { eq("brew_method_id", it) }
                         filter.generationRequestId?.let { eq("generation_request_id", it) }
-                        filter.status?.let { eq("status", it.toDto()) }
+                        filter.status?.let { eq("status", it.toDto().toQueryValue()) }
                         filter.createdAfterIso?.let { gte("created_at", it) }
                         filter.createdBeforeIso?.let { lte("created_at", it) }
 
                         if (filter.status == null) {
-                            neq("status", RecipeStatus.Deleted.toDto())
+                            neq("status", RecipeStatus.Deleted.toDto().toQueryValue())
                         }
                     }
                     order(

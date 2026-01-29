@@ -102,3 +102,13 @@ fun RecipeStatus.toDto(): RecipeStatusDto {
         RecipeStatus.Deleted -> RecipeStatusDto.Deleted
     }
 }
+
+fun RecipeStatusDto.toQueryValue(): String {
+    return when (this) {
+        RecipeStatusDto.Draft -> "draft"
+        RecipeStatusDto.Saved -> "saved"
+        RecipeStatusDto.Edited -> "edited"
+        RecipeStatusDto.Rejected -> "rejected"
+        RecipeStatusDto.Deleted -> "deleted"
+    }
+}
