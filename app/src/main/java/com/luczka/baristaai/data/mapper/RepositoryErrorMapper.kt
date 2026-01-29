@@ -2,6 +2,7 @@ package com.luczka.baristaai.data.mapper
 
 import com.luczka.baristaai.data.datasource.UnauthorizedException
 import com.luczka.baristaai.domain.error.RepositoryError
+import io.github.jan.supabase.exceptions.RestException
 import io.ktor.client.plugins.ResponseException
 import java.io.IOException
 
@@ -11,9 +12,21 @@ fun Throwable.toRepositoryError(): RepositoryError {
         is IllegalArgumentException -> RepositoryError.Validation(
             message ?: "Invalid input."
         )
+        is RestException -> toRepositoryError()
         is ResponseException -> toRepositoryError()
         is IOException -> RepositoryError.Network("Network error.")
-        else -> RepositoryError.Unknown("Unexpected error.", this)
+        else -> RepositoryError.Unknown(message ?: "Unexpected error.", this)
+    }
+}
+
+private fun RestException.toRepositoryError(): RepositoryError {
+    val errorMessage = message ?: description ?: "Request failed."
+    return when (statusCode) {
+        400, 422 -> RepositoryError.Validation(errorMessage)
+        401, 403 -> RepositoryError.Unauthorized(errorMessage)
+        404 -> RepositoryError.NotFound(errorMessage)
+        in 500..599 -> RepositoryError.Network("Server error.")
+        else -> RepositoryError.Unknown(errorMessage, this)
     }
 }
 
