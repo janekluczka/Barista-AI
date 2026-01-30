@@ -19,6 +19,8 @@ import com.luczka.baristaai.ui.screens.login.LoginEvent
 import com.luczka.baristaai.ui.screens.login.LoginRoute
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileRoute
+import com.luczka.baristaai.ui.screens.recipe_detail.RecipeDetailEvent
+import com.luczka.baristaai.ui.screens.recipe_detail.RecipeDetailRoute
 import com.luczka.baristaai.ui.screens.register.RegisterEvent
 import com.luczka.baristaai.ui.screens.register.RegisterRoute
 
@@ -146,6 +148,26 @@ fun BaristaAINavHost(
             }
 
             composable<Route.RecipeDetail> {
+                RecipeDetailRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            RecipeDetailEvent.NavigateBack -> navController.popBackStack()
+                            RecipeDetailEvent.NavigateToHome -> navController.navigate(Route.Home) {
+                                popUpTo<Route.Home> {
+                                    inclusive = true
+                                }
+                            }
+                            is RecipeDetailEvent.NavigateToEdit -> navController.navigate(
+                                Route.EditRecipe(
+                                    mode = EditRecipeMode.SAVED,
+                                    recipeId = event.recipeId
+                                )
+                            )
+                            is RecipeDetailEvent.ShowError -> Unit
+                            is RecipeDetailEvent.ShowMessage -> Unit
+                        }
+                    }
+                )
             }
 
             composable<Route.Profile> {
