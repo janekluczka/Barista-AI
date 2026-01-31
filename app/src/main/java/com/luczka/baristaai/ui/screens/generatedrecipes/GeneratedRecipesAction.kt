@@ -1,4 +1,4 @@
-package com.luczka.baristaai.ui.screens.generated
+package com.luczka.baristaai.ui.screens.generatedrecipes
 
 sealed interface GeneratedRecipesAction {
     data class EditRecipe(val recipeId: String) : GeneratedRecipesAction

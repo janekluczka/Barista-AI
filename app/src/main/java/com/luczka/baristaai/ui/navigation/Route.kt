@@ -33,6 +33,11 @@ sealed interface Route {
     ) : Route
 
     @Serializable
+    data class EditGeneratedRecipe(
+        val recipeId: String
+    ) : Route
+
+    @Serializable
     data class RecipeDetail(
         val recipeId: String
     ) : Route

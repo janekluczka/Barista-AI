@@ -9,10 +9,12 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.luczka.baristaai.ui.screens.edit.EditRecipeEvent
 import com.luczka.baristaai.ui.screens.edit.EditRecipeRoute
-import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesEvent
-import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesRoute
-import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesSuccessEvent
-import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesSuccessRoute
+import com.luczka.baristaai.ui.screens.editgeneratedrecipe.EditGeneratedRecipeEvent
+import com.luczka.baristaai.ui.screens.editgeneratedrecipe.EditGeneratedRecipeRoute
+import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesEvent
+import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesRoute
+import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesSuccessEvent
+import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesSuccessRoute
 import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
 import com.luczka.baristaai.ui.screens.generate.GenerateRecipeRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
@@ -121,11 +123,9 @@ fun BaristaAINavHost(
                             GeneratedRecipesEvent.NavigateToSuccess -> navController.navigate(
                                 Route.GeneratedRecipesSuccess
                             )
-                            is GeneratedRecipesEvent.NavigateToEditRecipe -> navController.navigate(
-                                Route.EditRecipe(
-                                    mode = EditRecipeMode.DRAFT,
-                                    recipeId = event.recipeId,
-                                    requestId = route.requestId
+                            is GeneratedRecipesEvent.NavigateToEditGeneratedRecipe -> navController.navigate(
+                                Route.EditGeneratedRecipe(
+                                    recipeId = event.recipeId
                                 )
                             )
                             is GeneratedRecipesEvent.ShowMessage -> Unit
@@ -162,6 +162,24 @@ fun BaristaAINavHost(
                             }
                             is EditRecipeEvent.ShowError -> Unit
                             is EditRecipeEvent.ShowMessage -> Unit
+                        }
+                    }
+                )
+            }
+
+            composable<Route.EditGeneratedRecipe> {
+                EditGeneratedRecipeRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            EditGeneratedRecipeEvent.NavigateBack -> navController.popBackStack()
+                            EditGeneratedRecipeEvent.NavigateBackWithRefresh -> {
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("refreshGeneratedRecipes", System.currentTimeMillis())
+                                navController.popBackStack()
+                            }
+                            is EditGeneratedRecipeEvent.ShowError -> Unit
+                            is EditGeneratedRecipeEvent.ShowMessage -> Unit
                         }
                     }
                 )

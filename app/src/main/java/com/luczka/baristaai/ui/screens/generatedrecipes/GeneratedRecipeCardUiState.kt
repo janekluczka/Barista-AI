@@ -1,4 +1,4 @@
-package com.luczka.baristaai.ui.screens.generated
+package com.luczka.baristaai.ui.screens.generatedrecipes
 
 data class GeneratedRecipeCardUiState(
     val id: String,

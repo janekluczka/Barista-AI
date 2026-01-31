@@ -1,4 +1,4 @@
-package com.luczka.baristaai.ui.screens.generated
+package com.luczka.baristaai.ui.screens.generatedrecipes
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -45,12 +46,22 @@ class GeneratedRecipesViewModel @Inject constructor(
 
     init {
         val requestId = savedStateHandle.get<String>("requestId")
+        val refreshFlow = savedStateHandle.getStateFlow(REFRESH_KEY, 0)
         updateState { it.copy(requestId = requestId) }
         if (requestId.isNullOrBlank()) {
             sendEvent(GeneratedRecipesEvent.ShowMessage("Request not found."))
             sendEvent(GeneratedRecipesEvent.NavigateBack)
         } else {
             initialize(requestId)
+        }
+
+        viewModelScope.launch {
+            refreshFlow.drop(1).collect {
+                val currentRequestId = _uiState.value.requestId
+                if (!currentRequestId.isNullOrBlank()) {
+                    initialize(currentRequestId)
+                }
+            }
         }
     }
 
@@ -97,18 +108,18 @@ class GeneratedRecipesViewModel @Inject constructor(
             val brewMethods = (brewMethodsResult as RepositoryResult.Success).value
             val recipes = (recipesResult as RepositoryResult.Success).value
                 .mapIndexed { index, recipe ->
-                val methodName = brewMethods.firstOrNull { it.id == recipe.brewMethodId }?.name
-                GeneratedRecipeCardUiState(
-                    id = recipe.id,
-                    title = methodName ?: "Recipe ${index + 1}",
-                    coffeeAmount = "${formatAmount(recipe.coffeeAmount)} g",
-                    waterAmount = "${formatAmount(recipe.waterAmount)} g",
-                    ratio = "${recipe.ratioCoffee}:${recipe.ratioWater}",
-                    temperature = "${recipe.temperature}°C",
-                    assistantTip = recipe.assistantTip,
-                    selection = RecipeSelection.None
-                )
-            }
+                    val methodName = brewMethods.firstOrNull { it.id == recipe.brewMethodId }?.name
+                    GeneratedRecipeCardUiState(
+                        id = recipe.id,
+                        title = methodName ?: "Recipe ${index + 1}",
+                        coffeeAmount = "${formatAmount(recipe.coffeeAmount)} g",
+                        waterAmount = "${formatAmount(recipe.waterAmount)} g",
+                        ratio = "${recipe.ratioCoffee}:${recipe.ratioWater}",
+                        temperature = "${recipe.temperature}°C",
+                        assistantTip = recipe.assistantTip,
+                        selection = RecipeSelection.None
+                    )
+                }
 
             updateState { state ->
                 state.copy(
@@ -121,7 +132,7 @@ class GeneratedRecipesViewModel @Inject constructor(
     }
 
     private fun editRecipe(recipeId: String) {
-        sendEvent(GeneratedRecipesEvent.NavigateToEditRecipe(recipeId))
+        sendEvent(GeneratedRecipesEvent.NavigateToEditGeneratedRecipe(recipeId))
     }
 
     private fun toggleSelection(recipeId: String, selection: RecipeSelection) {
@@ -281,5 +292,6 @@ class GeneratedRecipesViewModel @Inject constructor(
     private companion object {
         const val TAG: String = "GeneratedRecipesViewModel"
         const val DRAFT_PAGE_SIZE: Int = 10
+        const val REFRESH_KEY: String = "refreshGeneratedRecipes"
     }
 }
