@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -33,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -60,6 +60,7 @@ import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileUiState
 import com.luczka.baristaai.ui.screens.profile.ProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
+import java.util.Locale
 
 @Composable
 fun HomeRoute(
@@ -370,7 +371,7 @@ private fun RecipeList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(recipes, key = { it.id }) { recipe ->
-            RecipePlaceholderItem(
+            RecipeCard(
                 recipe = recipe,
                 onClick = { onRecipeClick(recipe.id) }
             )
@@ -391,31 +392,49 @@ private fun RecipeList(
 }
 
 @Composable
-private fun RecipePlaceholderItem(
+private fun RecipeCard(
     recipe: RecipeUiState,
     onClick: () -> Unit
 ) {
-    // TODO: Replace with real recipe card component.
-    Card(
+    OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = recipe.title,
+                text = recipe.methodName,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(text = recipe.methodId, style = MaterialTheme.typography.bodyMedium)
-                Text(text = recipe.status, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(12.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                MetricRow(label = "Coffee", value = "${formatAmount(recipe.coffeeAmount)} g")
+                MetricRow(label = "Ratio", value = "${recipe.ratioCoffee}:${recipe.ratioWater}")
+                MetricRow(label = "Water", value = "${formatAmount(recipe.waterAmount)} g")
+                MetricRow(label = "Temperature", value = "${recipe.temperature}°C")
             }
         }
     }
+}
+
+@Composable
+private fun MetricRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(text = value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+private fun formatAmount(value: Double): String {
+    return String.format(Locale.getDefault(), "%.1f", value)
 }
 
 @Composable

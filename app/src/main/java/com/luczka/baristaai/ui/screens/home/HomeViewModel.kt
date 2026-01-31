@@ -206,9 +206,12 @@ class HomeViewModel @Inject constructor(
         val methodLabel = methodsMap[brewMethodId]?.label ?: brewMethodId
         return RecipeUiState(
             id = id,
-            title = "Recipe",
-            methodId = methodLabel,
-            status = status.name.lowercase().replaceFirstChar { it.titlecase() }
+            methodName = methodLabel,
+            coffeeAmount = coffeeAmount,
+            ratioCoffee = ratioCoffee,
+            ratioWater = ratioWater,
+            waterAmount = waterAmount,
+            temperature = temperature
         )
     }
 
