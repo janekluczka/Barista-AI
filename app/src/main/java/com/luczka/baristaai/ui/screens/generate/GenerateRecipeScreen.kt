@@ -1,6 +1,5 @@
 package com.luczka.baristaai.ui.screens.generate
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +45,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import kotlinx.coroutines.flow.collectLatest
 
@@ -101,86 +100,82 @@ fun GenerateRecipeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Text(
-                text = "Brew method",
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            ClickableOutlinedTextField(
-                value = selectedMethodName,
-                onClick = { onAction(GenerateRecipeAction.OpenBrewMethodSheet) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Select method") },
-                isError = uiState.brewMethodError != null,
-                supportingText = {
-                    if (uiState.brewMethodError != null) {
-                        Text(text = uiState.brewMethodError)
-                    }
-                },
-                trailingIcon = {
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
-                }
-            )
-
-            OutlinedTextField(
-                value = uiState.coffeeAmountInput,
-                onValueChange = { onAction(GenerateRecipeAction.UpdateCoffeeAmount(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Coffee amount (g)") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal,
-                    imeAction = ImeAction.Next
-                ),
-                isError = uiState.coffeeAmountError != null,
-                supportingText = {
-                    if (uiState.coffeeAmountError != null) {
-                        Text(text = uiState.coffeeAmountError)
-                    }
-                }
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Can adjust temperature", style = MaterialTheme.typography.titleSmall)
+                if (uiState.errorMessage != null) {
                     Text(
-                        text = "If disabled, default temperature is applied.",
-                        style = MaterialTheme.typography.bodySmall
+                        text = uiState.errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                Switch(
-                    checked = uiState.canAdjustTemperature,
-                    onCheckedChange = { onAction(GenerateRecipeAction.UpdateCanAdjustTemperature(it)) }
+
+                ClickableOutlinedTextField(
+                    value = selectedMethodName,
+                    onClick = { onAction(GenerateRecipeAction.OpenBrewMethodSheet) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Select method") },
+                    isError = uiState.brewMethodError != null,
+                    supportingText = {
+                        if (uiState.brewMethodError != null) {
+                            Text(text = uiState.brewMethodError)
+                        }
+                    },
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
+                    }
+                )
+
+                OutlinedTextField(
+                    value = uiState.coffeeAmountInput,
+                    onValueChange = { onAction(GenerateRecipeAction.UpdateCoffeeAmount(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Coffee amount (g)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Next
+                    ),
+                    isError = uiState.coffeeAmountError != null,
+                    supportingText = {
+                        if (uiState.coffeeAmountError != null) {
+                            Text(text = uiState.coffeeAmountError)
+                        }
+                    }
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Can regulate temperature")
+                    Switch(
+                        checked = uiState.canAdjustTemperature,
+                        onCheckedChange = { onAction(GenerateRecipeAction.UpdateCanAdjustTemperature(it)) }
+                    )
+                }
+
+                OutlinedTextField(
+                    value = uiState.userComment,
+                    onValueChange = { onAction(GenerateRecipeAction.UpdateUserComment(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Comment*") },
+                    supportingText = { Text(text = "*Optional") },
+                    minLines = 3
                 )
             }
-
-            OutlinedTextField(
-                value = uiState.userComment,
-                onValueChange = { onAction(GenerateRecipeAction.UpdateUserComment(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Comment (optional)") },
-                minLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = { onAction(GenerateRecipeAction.SubmitRequest) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 enabled = uiState.isSubmitEnabled && !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
@@ -193,7 +188,6 @@ fun GenerateRecipeScreen(
                     Text(text = "Generate")
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 
@@ -219,20 +213,16 @@ fun GenerateRecipeScreen(
                 ) {
                     items(uiState.brewMethods, key = { it.id }) { method ->
                         val isSelected = method.id == uiState.selectedBrewMethodId
-                        ListItem(
-                            headlineContent = { Text(text = method.name) },
-                            supportingContent = { Text(text = method.slug) },
+                        BottomSheetListItem(
+                            headlineText = method.name,
                             trailingContent = {
                                 RadioButton(
                                     selected = isSelected,
                                     onClick = { onAction(GenerateRecipeAction.SelectBrewMethod(method.id)) }
                                 )
                             },
-                            modifier = Modifier.clickable {
-                                onAction(GenerateRecipeAction.SelectBrewMethod(method.id))
-                            }
+                            onClick = { onAction(GenerateRecipeAction.SelectBrewMethod(method.id)) }
                         )
-                        Divider()
                     }
                 }
             }

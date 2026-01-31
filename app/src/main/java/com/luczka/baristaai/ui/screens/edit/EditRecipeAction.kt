@@ -13,6 +13,7 @@ sealed interface EditRecipeAction {
     data class UpdateWaterAmount(val value: String) : EditRecipeAction
     data class UpdateRatioCoffee(val value: String) : EditRecipeAction
     data class UpdateRatioWater(val value: String) : EditRecipeAction
+    data class UpdateCanRegulateTemperature(val value: Boolean) : EditRecipeAction
     data class UpdateTemperature(val value: String) : EditRecipeAction
     data class UpdateAssistantTip(val value: String) : EditRecipeAction
 

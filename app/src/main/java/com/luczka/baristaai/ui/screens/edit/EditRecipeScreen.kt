@@ -1,6 +1,7 @@
 package com.luczka.baristaai.ui.screens.edit
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,11 +20,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -31,12 +30,13 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,9 +49,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import com.luczka.baristaai.ui.navigation.EditRecipeMode
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun EditRecipeRoute(
@@ -87,15 +89,20 @@ fun EditRecipeScreen(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val selectedMethodName = uiState.selectedBrewMethodName.orEmpty()
+    val temperatureInteractionSource = if (uiState.canRegulateTemperature) {
+        remember { MutableInteractionSource() }
+    } else {
+        rememberNoInteractionSource()
+    }
     val title = when (uiState.mode) {
-        EditRecipeMode.DRAFT -> "Review recipe"
-        EditRecipeMode.SAVED -> "Edit recipe"
         EditRecipeMode.MANUAL -> "Add recipe"
+        EditRecipeMode.DRAFT,
+        EditRecipeMode.SAVED -> "Edit recipe"
     }
     val submitLabel = when (uiState.mode) {
-        EditRecipeMode.DRAFT -> "Accept & save"
-        EditRecipeMode.SAVED -> "Save changes"
         EditRecipeMode.MANUAL -> "Save recipe"
+        EditRecipeMode.DRAFT,
+        EditRecipeMode.SAVED -> "Save changes"
     }
 
     Scaffold(
@@ -115,162 +122,186 @@ fun EditRecipeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Text(text = "Brew method", style = MaterialTheme.typography.titleSmall)
-
-            ClickableOutlinedTextField(
-                value = selectedMethodName,
-                onClick = { onAction(EditRecipeAction.OpenBrewMethodSheet) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Select method") },
-                isError = uiState.brewMethodError != null,
-                supportingText = {
-                    if (uiState.brewMethodError != null) {
-                        Text(text = uiState.brewMethodError)
-                    }
-                },
-                trailingIcon = {
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
-                }
-            )
-
-            OutlinedTextField(
-                value = uiState.coffeeAmountInput,
-                onValueChange = { onAction(EditRecipeAction.UpdateCoffeeAmount(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Coffee amount (g)") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal,
-                    imeAction = ImeAction.Next
-                ),
-                isError = uiState.coffeeAmountError != null,
-                supportingText = {
-                    if (uiState.coffeeAmountError != null) {
-                        Text(text = uiState.coffeeAmountError)
-                    }
-                }
-            )
-
-            Text(text = "Ratio coffee : Ratio water", style = MaterialTheme.typography.titleSmall)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (uiState.errorMessage != null) {
+                    Text(
+                        text = uiState.errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                ClickableOutlinedTextField(
+                    value = selectedMethodName,
+                    onClick = { onAction(EditRecipeAction.OpenBrewMethodSheet) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Select method") },
+                    isError = uiState.brewMethodError != null,
+                    supportingText = {
+                        if (uiState.brewMethodError != null) {
+                            Text(text = uiState.brewMethodError)
+                        }
+                    },
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
+                    }
+                )
+
                 OutlinedTextField(
-                    value = uiState.ratioCoffeeInput,
-                    onValueChange = { onAction(EditRecipeAction.UpdateRatioCoffee(it)) },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(text = "Ratio coffee") },
+                    value = uiState.coffeeAmountInput,
+                    onValueChange = { onAction(EditRecipeAction.UpdateCoffeeAmount(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Coffee amount (g)") },
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
                     ),
-                    isError = uiState.ratioCoffeeError != null,
+                    isError = uiState.coffeeAmountError != null,
                     supportingText = {
-                        if (uiState.ratioCoffeeError != null) {
-                            Text(text = uiState.ratioCoffeeError)
+                        if (uiState.coffeeAmountError != null) {
+                            Text(text = uiState.coffeeAmountError)
                         }
                     }
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    OutlinedTextField(
+                        value = uiState.ratioCoffeeInput,
+                        onValueChange = { onAction(EditRecipeAction.UpdateRatioCoffee(it)) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(text = "Ratio coffee") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        isError = uiState.ratioCoffeeError != null,
+                        supportingText = {
+                            if (uiState.ratioCoffeeError != null) {
+                                Text(text = uiState.ratioCoffeeError)
+                            }
+                        }
+                    )
+                    Text(
+                        text = ":",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                    OutlinedTextField(
+                        value = uiState.ratioWaterInput,
+                        onValueChange = { onAction(EditRecipeAction.UpdateRatioWater(it)) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(text = "Ratio water") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        isError = uiState.ratioWaterError != null,
+                        supportingText = {
+                            if (uiState.ratioWaterError != null) {
+                                Text(text = uiState.ratioWaterError)
+                            }
+                        }
+                    )
+                }
+
                 OutlinedTextField(
-                    value = uiState.ratioWaterInput,
-                    onValueChange = { onAction(EditRecipeAction.UpdateRatioWater(it)) },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(text = "Ratio water") },
+                    value = uiState.waterAmountInput,
+                    onValueChange = { onAction(EditRecipeAction.UpdateWaterAmount(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Water amount (g)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Next
+                    ),
+                    readOnly = true,
+                    isError = uiState.waterAmountError != null,
+                    interactionSource = rememberNoInteractionSource(),
+                    trailingIcon = {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text(text = "Calculated from coffee amount and ratio.")
+                                }
+                            },
+                            state = rememberTooltipState()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Water amount info"
+                            )
+                        }
+                    },
+                    supportingText = {
+                        if (uiState.waterAmountError != null) {
+                            Text(text = uiState.waterAmountError)
+                        }
+                    }
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Can regulate temperature")
+                    Switch(
+                        checked = uiState.canRegulateTemperature,
+                        enabled = uiState.mode == EditRecipeMode.MANUAL,
+                        onCheckedChange = {
+                            onAction(EditRecipeAction.UpdateCanRegulateTemperature(it))
+                        }
+                    )
+                }
+
+                OutlinedTextField(
+                    value = uiState.temperatureInput,
+                    onValueChange = { onAction(EditRecipeAction.UpdateTemperature(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Temperature (°C)") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next
                     ),
-                    isError = uiState.ratioWaterError != null,
+                    readOnly = !uiState.canRegulateTemperature,
+                    isError = uiState.temperatureError != null,
+                    interactionSource = temperatureInteractionSource,
                     supportingText = {
-                        if (uiState.ratioWaterError != null) {
-                            Text(text = uiState.ratioWaterError)
+                        if (uiState.temperatureError != null) {
+                            Text(text = uiState.temperatureError)
                         }
                     }
+                )
+
+                OutlinedTextField(
+                    value = uiState.assistantTipInput,
+                    onValueChange = { onAction(EditRecipeAction.UpdateAssistantTip(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Comment*") },
+                    supportingText = { Text(text = "*Optional") },
+                    minLines = 3
                 )
             }
-
-            OutlinedTextField(
-                value = uiState.waterAmountInput,
-                onValueChange = { onAction(EditRecipeAction.UpdateWaterAmount(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Water amount (g)") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal,
-                    imeAction = ImeAction.Next
-                ),
-                enabled = false,
-                isError = uiState.waterAmountError != null,
-                trailingIcon = {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            PlainTooltip {
-                                Text(text = "Calculated from coffee amount and ratio.")
-                            }
-                        },
-                        state = rememberTooltipState()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Water amount info"
-                        )
-                    }
-                },
-                supportingText = {
-                    if (uiState.waterAmountError != null) {
-                        Text(text = uiState.waterAmountError)
-                    }
-                }
-            )
-
-            OutlinedTextField(
-                value = uiState.temperatureInput,
-                onValueChange = { onAction(EditRecipeAction.UpdateTemperature(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Temperature (°C)") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
-                isError = uiState.temperatureError != null,
-                supportingText = {
-                    if (uiState.temperatureError != null) {
-                        Text(text = uiState.temperatureError)
-                    }
-                }
-            )
-
-            OutlinedTextField(
-                value = uiState.assistantTipInput,
-                onValueChange = { onAction(EditRecipeAction.UpdateAssistantTip(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = "Assistant tip (optional)") },
-                minLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = { onAction(EditRecipeAction.Submit) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 enabled = uiState.isSubmitEnabled && !uiState.isLoading
             ) {
                 Text(text = submitLabel)
             }
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 
@@ -294,20 +325,16 @@ fun EditRecipeScreen(
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(uiState.brewMethods, key = { it.id }) { method ->
                         val isSelected = method.id == uiState.selectedBrewMethodId
-                        ListItem(
-                            headlineContent = { Text(text = method.name) },
-                            supportingContent = { Text(text = method.slug) },
+                        BottomSheetListItem(
+                            headlineText = method.name,
                             trailingContent = {
                                 androidx.compose.material3.RadioButton(
                                     selected = isSelected,
                                     onClick = { onAction(EditRecipeAction.SelectBrewMethod(method.id)) }
                                 )
                             },
-                            modifier = Modifier.clickable {
-                                onAction(EditRecipeAction.SelectBrewMethod(method.id))
-                            }
+                            onClick = { onAction(EditRecipeAction.SelectBrewMethod(method.id)) }
                         )
-                        Divider()
                     }
                 }
             }
@@ -324,4 +351,21 @@ private fun EditRecipeScreenPreview() {
         onAction = {},
         snackbarHostState = SnackbarHostState()
     )
+}
+
+@Composable
+private fun rememberNoInteractionSource(): MutableInteractionSource {
+    return remember {
+        object : MutableInteractionSource {
+            override val interactions = emptyFlow<Interaction>()
+
+            override suspend fun emit(interaction: Interaction) {
+                // No-op to avoid emitting interactions.
+            }
+
+            override fun tryEmit(interaction: Interaction): Boolean {
+                return false
+            }
+        }
+    }
 }

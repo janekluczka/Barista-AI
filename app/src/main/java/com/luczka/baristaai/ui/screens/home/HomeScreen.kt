@@ -1,7 +1,6 @@
 package com.luczka.baristaai.ui.screens.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,8 +30,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
@@ -54,12 +51,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.screens.profile.ProfileAction
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileUiState
@@ -248,9 +245,9 @@ fun HomeScreen(
                         CircularProgressIndicator(modifier = Modifier.size(20.dp))
                     }
                 } else {
-                    HomeBottomSheetListItem(
+                    BottomSheetListItem(
                         headlineText = "Log out",
-                        icon = {
+                        leadingContent = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                 contentDescription = "Log out"
@@ -276,9 +273,9 @@ fun HomeScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
-            HomeBottomSheetListItem(
+            BottomSheetListItem(
                 headlineText = "AI Assisted",
-                icon = {
+                leadingContent = {
                     Icon(
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = "AI Assisted"
@@ -286,9 +283,9 @@ fun HomeScreen(
                 },
                 onClick = { onAction(HomeAction.OpenGenerate) }
             )
-            HomeBottomSheetListItem(
+            BottomSheetListItem(
                 headlineText = "Manual",
-                icon = {
+                leadingContent = {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = "Manual"
@@ -402,25 +399,6 @@ private fun RecipeList(
     }
 }
 
-@Composable
-private fun HomeBottomSheetListItem(
-    icon: @Composable () -> Unit,
-    headlineText: String,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit
-) {
-    ListItem(
-        headlineContent = { Text(text = headlineText, color = color) },
-        leadingContent = icon,
-        colors = ListItemDefaults.colors(
-            leadingIconColor = color,
-            headlineColor = color
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    )
-}
 
 @Composable
 private fun RecipeCard(

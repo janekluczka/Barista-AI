@@ -52,7 +52,8 @@ class EditRecipeViewModel @Inject constructor(
             state.copy(
                 mode = mode,
                 recipeId = recipeId,
-                requestId = requestId
+                requestId = requestId,
+                canRegulateTemperature = mode != EditRecipeMode.MANUAL
             )
         }
         loadInitialData(recipeId)
@@ -68,6 +69,7 @@ class EditRecipeViewModel @Inject constructor(
             is EditRecipeAction.UpdateWaterAmount -> updateWaterAmount(action.value)
             is EditRecipeAction.UpdateRatioCoffee -> updateRatioCoffee(action.value)
             is EditRecipeAction.UpdateRatioWater -> updateRatioWater(action.value)
+            is EditRecipeAction.UpdateCanRegulateTemperature -> updateCanRegulateTemperature(action.value)
             is EditRecipeAction.UpdateTemperature -> updateTemperature(action.value)
             is EditRecipeAction.UpdateAssistantTip -> updateAssistantTip(action.value)
             EditRecipeAction.Submit -> submit()
@@ -123,7 +125,29 @@ class EditRecipeViewModel @Inject constructor(
         updateSubmitEnabled()
     }
 
+    private fun updateCanRegulateTemperature(value: Boolean) {
+        if (_uiState.value.mode != EditRecipeMode.MANUAL) {
+            return
+        }
+        if (value) {
+            updateState { it.copy(canRegulateTemperature = true) }
+            updateSubmitEnabled()
+            return
+        }
+        updateState {
+            it.copy(
+                canRegulateTemperature = false,
+                temperatureInput = "100",
+                temperatureError = null
+            )
+        }
+        updateSubmitEnabled()
+    }
+
     private fun updateTemperature(value: String) {
+        if (!_uiState.value.canRegulateTemperature) {
+            return
+        }
         updateText(
             value = value,
             update = { state, input -> state.copy(temperatureInput = input) }
@@ -215,6 +239,7 @@ class EditRecipeViewModel @Inject constructor(
             ratioCoffeeInput = ratioCoffee,
             ratioWaterInput = ratioWater,
             temperatureInput = temperature,
+            canRegulateTemperature = true,
             assistantTipInput = assistantTip,
             initialBrewMethodId = recipe.brewMethodId,
             initialCoffeeAmountInput = coffeeAmount,
@@ -222,6 +247,7 @@ class EditRecipeViewModel @Inject constructor(
             initialRatioCoffeeInput = ratioCoffee,
             initialRatioWaterInput = ratioWater,
             initialTemperatureInput = temperature,
+            initialCanRegulateTemperature = true,
             initialAssistantTipInput = assistantTip
         )
     }
@@ -381,6 +407,7 @@ class EditRecipeViewModel @Inject constructor(
             state.ratioCoffeeInput != state.initialRatioCoffeeInput ||
             state.ratioWaterInput != state.initialRatioWaterInput ||
             state.temperatureInput != state.initialTemperatureInput ||
+            state.canRegulateTemperature != state.initialCanRegulateTemperature ||
             state.assistantTipInput.trim() != state.initialAssistantTipInput.orEmpty()
     }
 
