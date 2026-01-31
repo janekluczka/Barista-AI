@@ -6,14 +6,12 @@ import com.luczka.baristaai.data.network.AndroidNetworkMonitor
 import com.luczka.baristaai.data.repository.AuthRepositoryImpl
 import com.luczka.baristaai.data.repository.BrewMethodsRepositoryImpl
 import com.luczka.baristaai.data.repository.GenerationRequestsRepositoryImpl
-import com.luczka.baristaai.data.repository.RecipeGenerationRepositoryImpl
 import com.luczka.baristaai.data.repository.RecipeActionLogsRepositoryImpl
 import com.luczka.baristaai.data.repository.RecipesRepositoryImpl
 import com.luczka.baristaai.domain.network.NetworkMonitor
 import com.luczka.baristaai.domain.repository.AuthRepository
 import com.luczka.baristaai.domain.repository.BrewMethodsRepository
 import com.luczka.baristaai.domain.repository.GenerationRequestsRepository
-import com.luczka.baristaai.domain.repository.RecipeGenerationRepository
 import com.luczka.baristaai.domain.repository.RecipeActionLogsRepository
 import com.luczka.baristaai.domain.repository.RecipesRepository
 import dagger.Binds
@@ -55,12 +53,6 @@ abstract class DataModule {
     abstract fun bindGenerationRequestsRepository(
         impl: GenerationRequestsRepositoryImpl
     ): GenerationRequestsRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindRecipeGenerationRepository(
-        impl: RecipeGenerationRepositoryImpl
-    ): RecipeGenerationRepository
 
     @Binds
     @Singleton

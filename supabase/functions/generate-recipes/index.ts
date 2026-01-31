@@ -27,6 +27,10 @@ type OpenRouterResponse = {
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+type RequestPayloadResult =
+  | { ok: true; value: GenerateRecipesRequest }
+  | { ok: false; error: Error };
+
 async function fetchWithTimeout(input: RequestInfo, init: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -106,6 +110,15 @@ function hasDistinctRecipes(recipes: OpenRouterRecipe[]): boolean {
   );
 
   return signatures.size === recipes.length;
+}
+
+async function parseRequestPayload(request: Request): Promise<RequestPayloadResult> {
+  try {
+    const payload = (await request.json()) as GenerateRecipesRequest;
+    return { ok: true, value: payload };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error : new Error(String(error)) };
+  }
 }
 
 function buildPrompt(params: {
@@ -249,8 +262,26 @@ Deno.serve(async (request) => {
       );
     }
 
-    const payload = (await request.json()) as GenerateRecipesRequest;
+    const payloadResult = await parseRequestPayload(request);
+    if (!payloadResult.ok) {
+      console.error("Invalid request payload JSON.", {
+        error: payloadResult.error.message,
+        contentType: request.headers.get("content-type"),
+      });
+      return new Response(
+        JSON.stringify({ error: "Invalid request payload." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const payload = payloadResult.value;
     if (!payload?.brew_method_id || !isValidNumber(payload.coffee_amount)) {
+      console.error("Invalid request payload fields.", {
+        brew_method_id: payload?.brew_method_id,
+        coffee_amount: payload?.coffee_amount,
+        can_adjust_temperature: payload?.can_adjust_temperature,
+        user_comment: payload?.user_comment ?? null,
+      });
       return new Response(
         JSON.stringify({ error: "Invalid request payload." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -258,6 +289,10 @@ Deno.serve(async (request) => {
     }
 
     if (payload.coffee_amount <= 0 || typeof payload.can_adjust_temperature !== "boolean") {
+      console.error("Invalid request payload values.", {
+        coffee_amount: payload.coffee_amount,
+        can_adjust_temperature: payload.can_adjust_temperature,
+      });
       return new Response(
         JSON.stringify({ error: "Invalid coffee amount or temperature flag." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -398,6 +433,9 @@ Deno.serve(async (request) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
+    console.error("Unhandled error while generating recipes.", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return new Response(
       JSON.stringify({ error: "Unhandled error.", details: `${error}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

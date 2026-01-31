@@ -8,6 +8,7 @@ import com.luczka.baristaai.domain.model.BrewMethod
 import com.luczka.baristaai.domain.model.PageRequest
 import com.luczka.baristaai.domain.model.Recipe
 import com.luczka.baristaai.domain.model.RecipeFilter
+import com.luczka.baristaai.domain.model.RecipeStatus
 import com.luczka.baristaai.domain.model.SortDirection
 import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
@@ -157,14 +158,16 @@ class HomeViewModel @Inject constructor(
                 val methodsMap = _uiState.value.filters
                     .filter { it.id != FilterUiState.ALL_FILTER_ID }
                     .associateBy { it.id }
-                val newItems = result.value.map { it.toUiState(methodsMap) }
+                val newItems = result.value
+                    .filter { it.status == RecipeStatus.Saved }
+                    .map { it.toUiState(methodsMap) }
                 val updatedRecipes = if (reset) newItems else currentRecipes + newItems
                 updateState {
                     it.copy(
                         recipes = updatedRecipes,
                         isLoading = false,
                         isLoadingMore = false,
-                        canLoadMore = newItems.size == PAGE_SIZE,
+                        canLoadMore = result.value.size == PAGE_SIZE,
                         errorMessage = null
                     )
                 }

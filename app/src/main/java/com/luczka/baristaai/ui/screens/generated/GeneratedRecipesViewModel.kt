@@ -7,28 +7,32 @@ import androidx.lifecycle.viewModelScope
 import com.luczka.baristaai.domain.error.RepositoryError
 import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.CreateRecipeActionLogModel
+import com.luczka.baristaai.domain.model.PageRequest
 import com.luczka.baristaai.domain.model.RecipeActionModel
+import com.luczka.baristaai.domain.model.RecipeFilter
 import com.luczka.baristaai.domain.model.RecipeStatus
+import com.luczka.baristaai.domain.model.SortDirection
+import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.model.UpdateRecipe
 import com.luczka.baristaai.domain.usecase.CreateRecipeActionLogUseCase
-import com.luczka.baristaai.domain.usecase.GenerateRecipesForRequestUseCase
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
+import com.luczka.baristaai.domain.usecase.ListRecipesUseCase
 import com.luczka.baristaai.domain.usecase.UpdateRecipeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import java.util.Locale
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
+import javax.inject.Inject
 
 @HiltViewModel
 class GeneratedRecipesViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val generateRecipesForRequestUseCase: GenerateRecipesForRequestUseCase,
     private val listBrewMethodsUseCase: ListBrewMethodsUseCase,
+    private val listRecipesUseCase: ListRecipesUseCase,
     private val updateRecipeUseCase: UpdateRecipeUseCase,
     private val createRecipeActionLogUseCase: CreateRecipeActionLogUseCase
 ) : ViewModel() {
@@ -78,15 +82,21 @@ class GeneratedRecipesViewModel @Inject constructor(
                 return@launch
             }
 
-            val generatedResult = generateRecipesForRequestUseCase(requestId)
-            if (generatedResult is RepositoryResult.Failure) {
-                showError(resolveErrorMessage(generatedResult.error))
+            val filter = RecipeFilter(
+                generationRequestId = requestId,
+                status = RecipeStatus.Draft
+            )
+            val page = PageRequest(limit = DRAFT_PAGE_SIZE, offset = 0)
+            val sort = SortOption(field = "created_at", direction = SortDirection.DESC)
+            val recipesResult = listRecipesUseCase(filter, page, sort)
+            if (recipesResult is RepositoryResult.Failure) {
+                showError(resolveErrorMessage(recipesResult.error))
                 return@launch
             }
 
             val brewMethods = (brewMethodsResult as RepositoryResult.Success).value
-            val result = (generatedResult as RepositoryResult.Success).value
-            val recipes = result.recipes.mapIndexed { index, recipe ->
+            val recipes = (recipesResult as RepositoryResult.Success).value
+                .mapIndexed { index, recipe ->
                 val methodName = brewMethods.firstOrNull { it.id == recipe.brewMethodId }?.name
                 GeneratedRecipeCardUiState(
                     id = recipe.id,
@@ -270,5 +280,6 @@ class GeneratedRecipesViewModel @Inject constructor(
 
     private companion object {
         const val TAG: String = "GeneratedRecipesViewModel"
+        const val DRAFT_PAGE_SIZE: Int = 10
     }
 }
