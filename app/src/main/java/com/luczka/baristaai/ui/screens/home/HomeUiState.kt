@@ -8,5 +8,6 @@ data class HomeUiState(
     val selectedFilterId: String? = null,
     val recipes: List<RecipeUiState> = emptyList(),
     val errorMessage: String? = null,
-    val isAddOptionSheetVisible: Boolean = false
+    val isAddOptionSheetVisible: Boolean = false,
+    val isProfileSheetVisible: Boolean = false
 )

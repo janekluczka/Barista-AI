@@ -42,7 +42,8 @@ class HomeViewModel @Inject constructor(
             HomeAction.LoadRecipes -> loadRecipes()
             HomeAction.LoadMore -> loadMoreRecipes()
             is HomeAction.SelectFilter -> selectFilter(action.filterId)
-            HomeAction.OpenProfile -> sendEvent(HomeEvent.NavigateToProfile)
+            HomeAction.OpenProfile -> updateState { it.copy(isProfileSheetVisible = true) }
+            HomeAction.DismissProfile -> updateState { it.copy(isProfileSheetVisible = false) }
             HomeAction.OpenAddOptions -> updateState { it.copy(isAddOptionSheetVisible = true) }
             HomeAction.DismissAddOptions -> updateState { it.copy(isAddOptionSheetVisible = false) }
             HomeAction.OpenGenerate -> openGenerate()

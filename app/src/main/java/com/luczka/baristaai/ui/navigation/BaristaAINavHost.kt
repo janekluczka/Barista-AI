@@ -74,7 +74,6 @@ fun MainAppNavHost(
             HomeRoute(
                 onEvent = { event ->
                     when (event) {
-                        HomeEvent.NavigateToProfile -> navController.navigate(Route.Profile)
                         HomeEvent.NavigateToGenerate -> navController.navigate(Route.GenerateRecipe)
                         HomeEvent.NavigateToManual -> navController.navigate(
                             Route.EditRecipe(mode = EditRecipeMode.MANUAL)
@@ -82,6 +81,7 @@ fun MainAppNavHost(
                         is HomeEvent.NavigateToRecipeDetail -> navController.navigate(
                             Route.RecipeDetail(recipeId = event.recipeId)
                         )
+                        HomeEvent.NavigateToLogin -> onNavigateToAuth()
                         is HomeEvent.ShowError -> Unit
                     }
                 }

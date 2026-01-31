@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -42,7 +45,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +55,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.screens.profile.ProfileAction
+import com.luczka.baristaai.ui.screens.profile.ProfileEvent
+import com.luczka.baristaai.ui.screens.profile.ProfileUiState
+import com.luczka.baristaai.ui.screens.profile.ProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -58,7 +67,10 @@ fun HomeRoute(
     onEvent: (HomeEvent) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+    val profileUiState by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var isLogoutDialogVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
@@ -69,18 +81,43 @@ fun HomeRoute(
         }
     }
 
+    LaunchedEffect(Unit) {
+        profileViewModel.event.collectLatest { event ->
+            when (event) {
+                is ProfileEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+                ProfileEvent.NavigateToLogin -> onEvent(HomeEvent.NavigateToLogin)
+                ProfileEvent.NavigateBack -> Unit
+            }
+        }
+    }
+
     HomeScreen(
         uiState = uiState,
+        profileUiState = profileUiState,
         onAction = viewModel::handleAction,
+        onLogoutClick = { isLogoutDialogVisible = true },
         snackbarHostState = snackbarHostState
     )
+
+    if (isLogoutDialogVisible) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                isLogoutDialogVisible = false
+                viewModel.handleAction(HomeAction.DismissProfile)
+                profileViewModel.handleAction(ProfileAction.ConfirmLogout)
+            },
+            onDismiss = { isLogoutDialogVisible = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
+    profileUiState: ProfileUiState,
     onAction: (HomeAction) -> Unit,
+    onLogoutClick: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -161,6 +198,65 @@ fun HomeScreen(
                     onAction(HomeAction.LoadMore)
                 }
             )
+        }
+    }
+
+    if (uiState.isProfileSheetVisible) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { onAction(HomeAction.DismissProfile) },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "User avatar",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = profileUiState.email ?: "Email not available",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                if (profileUiState.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    }
+                } else {
+                    ListItem(
+                        headlineContent = { Text(text = "Log out") },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Log out"
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onLogoutClick)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 
@@ -322,6 +418,28 @@ private fun RecipePlaceholderItem(
     }
 }
 
+@Composable
+private fun LogoutConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Log out") },
+        text = { Text(text = "Are you sure you want to log out?") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = "Log out")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Cancel")
+            }
+        }
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenEmptyPreview() {
@@ -333,7 +451,9 @@ private fun HomeScreenEmptyPreview() {
                 FilterUiState(id = "aeropress", label = "Aeropress")
             )
         ),
+        profileUiState = ProfileUiState(email = "alex@example.com"),
         onAction = {},
+        onLogoutClick = {},
         snackbarHostState = SnackbarHostState()
     )
 }
@@ -350,7 +470,9 @@ private fun HomeScreenLoadingPreview() {
                 FilterUiState(id = "aeropress", label = "Aeropress")
             )
         ),
+        profileUiState = ProfileUiState(email = "alex@example.com"),
         onAction = {},
+        onLogoutClick = {},
         snackbarHostState = SnackbarHostState()
     )
 }
