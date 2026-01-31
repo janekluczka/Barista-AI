@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -432,14 +433,8 @@ private fun RecipeCard(
         onClick = onClick
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = recipe.methodName,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(12.dp))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                MetricRow(label = "Method", value = recipe.methodName)
                 MetricRow(label = "Coffee", value = "${formatAmount(recipe.coffeeAmount)} g")
                 MetricRow(label = "Ratio", value = "${recipe.ratioCoffee}:${recipe.ratioWater}")
                 MetricRow(label = "Water", value = "${formatAmount(recipe.waterAmount)} g")
@@ -460,7 +455,12 @@ private fun MetricRow(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
