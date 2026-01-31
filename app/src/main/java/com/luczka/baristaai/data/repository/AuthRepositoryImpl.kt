@@ -8,12 +8,12 @@ import com.luczka.baristaai.domain.error.RepositoryResult
 import com.luczka.baristaai.domain.model.AuthUser
 import com.luczka.baristaai.domain.repository.AuthRepository
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
-import javax.inject.Inject
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val dataSource: SupabaseDataSource
@@ -105,7 +105,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentUser(): RepositoryResult<AuthUser?> {
         val result = runCatching {
-            dataSource.client.auth.currentUserOrNull()?.let { it.toDomain() }
+            dataSource.client.auth.currentUserOrNull()?.toDomain()
         }
 
         return result.fold(
@@ -114,10 +114,8 @@ class AuthRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun observeAuthState(): Flow<AuthUser?> {
-        return dataSource.client.auth.sessionStatus.map {
-            dataSource.client.auth.currentUserOrNull()?.let { user -> user.toDomain() }
-        }
+    override fun observeAuthState(): Flow<SessionStatus> {
+        return dataSource.client.auth.sessionStatus
     }
 
     private fun validateCredentials(

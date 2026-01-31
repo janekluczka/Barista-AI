@@ -7,22 +7,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import com.luczka.baristaai.ui.navigation.MainAppNavHost
+import com.luczka.baristaai.ui.navigation.AuthNavHost
 import com.luczka.baristaai.ui.theme.BaristaAITheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainAppActivity : ComponentActivity() {
+class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             BaristaAITheme {
-                MainAppNavHost(
+                AuthNavHost(
                     navController = rememberNavController(),
-                    onNavigateToAuth = {
+                    onAuthSuccess = {
                         startActivity(
-                            AuthActivity.createIntent(this).apply {
+                            MainAppActivity.createIntent(this).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                             }
                         )
@@ -35,7 +35,7 @@ class MainAppActivity : ComponentActivity() {
 
     companion object {
         fun createIntent(context: Context): Intent {
-            return Intent(context, MainAppActivity::class.java)
+            return Intent(context, AuthActivity::class.java)
         }
     }
 }

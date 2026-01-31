@@ -2,10 +2,10 @@ package com.luczka.baristaai.ui.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.luczka.baristaai.domain.error.RepositoryResult
-import com.luczka.baristaai.domain.usecase.GetCurrentUserUseCase
 import com.luczka.baristaai.domain.usecase.ObserveAuthStateUseCase
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.jan.supabase.auth.status.SessionStatus
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,43 +13,39 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
-    private val observeAuthStateUseCase: ObserveAuthStateUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val observeAuthStateUseCase: ObserveAuthStateUseCase
 ) : ViewModel() {
+    private val logTag = "AuthStateViewModel"
     private val _uiState: MutableStateFlow<AuthStateUiState> = MutableStateFlow(AuthStateUiState())
     val uiState: StateFlow<AuthStateUiState> = _uiState
 
     init {
-        loadInitialAuthState()
         observeAuthState()
-    }
-
-    private fun loadInitialAuthState() {
-        viewModelScope.launch {
-            when (val result = getCurrentUserUseCase()) {
-                is RepositoryResult.Success -> {
-                    _uiState.value = AuthStateUiState(
-                        isLoading = false,
-                        isAuthenticated = result.value != null
-                    )
-                }
-                is RepositoryResult.Failure -> {
-                    _uiState.value = AuthStateUiState(
-                        isLoading = false,
-                        isAuthenticated = false
-                    )
-                }
-            }
-        }
     }
 
     private fun observeAuthState() {
         viewModelScope.launch {
-            observeAuthStateUseCase().collect { user ->
-                _uiState.value = AuthStateUiState(
-                    isLoading = false,
-                    isAuthenticated = user != null
-                )
+            observeAuthStateUseCase().collect { status ->
+                Log.d(logTag, "Session status: $status")
+                _uiState.value = when (status) {
+                    SessionStatus.Initializing -> AuthStateUiState(
+                        isLoading = true,
+                        isAuthenticated = false
+                    )
+                    is SessionStatus.Authenticated -> AuthStateUiState(
+                        isLoading = false,
+                        isAuthenticated = true
+                    )
+                    is SessionStatus.NotAuthenticated -> AuthStateUiState(
+                        isLoading = false,
+                        isAuthenticated = false
+                    )
+                    is SessionStatus.RefreshFailure -> AuthStateUiState(
+                        isLoading = false,
+                        isAuthenticated = false
+                    )
+                }
+                Log.d(logTag, "Auth UI state: ${_uiState.value}")
             }
         }
     }

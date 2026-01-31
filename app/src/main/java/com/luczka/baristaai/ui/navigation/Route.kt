@@ -43,16 +43,6 @@ sealed interface Route {
 }
 
 @Serializable
-sealed interface Graph {
-
-    @Serializable
-    data object Auth : Graph
-
-    @Serializable
-    data object App : Graph
-}
-
-@Serializable
 enum class EditRecipeMode {
     DRAFT,
     SAVED,
