@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +32,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
@@ -51,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -211,7 +215,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
@@ -243,17 +247,16 @@ fun HomeScreen(
                         CircularProgressIndicator(modifier = Modifier.size(20.dp))
                     }
                 } else {
-                    ListItem(
-                        headlineContent = { Text(text = "Log out") },
-                        leadingContent = {
+                    HomeBottomSheetListItem(
+                        headlineText = "Log out",
+                        icon = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                 contentDescription = "Log out"
                             )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onLogoutClick)
+                        color = MaterialTheme.colorScheme.error,
+                        onClick = onLogoutClick
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -268,23 +271,29 @@ fun HomeScreen(
             sheetState = sheetState
         ) {
             Text(
-                text = "Add recipe",
+                text = "Add recipes",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
-            ListItem(
-                headlineContent = { Text(text = "AI assisted") },
-                supportingContent = { Text(text = "Generate recipe with AI") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAction(HomeAction.OpenGenerate) }
+            HomeBottomSheetListItem(
+                headlineText = "AI Assisted",
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.AutoAwesome,
+                        contentDescription = "AI Assisted"
+                    )
+                },
+                onClick = { onAction(HomeAction.OpenGenerate) }
             )
-            ListItem(
-                headlineContent = { Text(text = "Manual") },
-                supportingContent = { Text(text = "Create recipe by hand") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAction(HomeAction.OpenManual) }
+            HomeBottomSheetListItem(
+                headlineText = "Manual",
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = "Manual"
+                    )
+                },
+                onClick = { onAction(HomeAction.OpenManual) }
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -390,6 +399,26 @@ private fun RecipeList(
             }
         }
     }
+}
+
+@Composable
+private fun HomeBottomSheetListItem(
+    icon: @Composable () -> Unit,
+    headlineText: String,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    ListItem(
+        headlineContent = { Text(text = headlineText, color = color) },
+        leadingContent = icon,
+        colors = ListItemDefaults.colors(
+            leadingIconColor = color,
+            headlineColor = color
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    )
 }
 
 @Composable
