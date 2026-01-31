@@ -32,10 +32,6 @@ sealed interface Route {
         val requestId: String? = null
     ) : Route
 
-    @Serializable
-    data class EditGeneratedRecipe(
-        val recipeId: String
-    ) : Route
 
     @Serializable
     data class RecipeDetail(

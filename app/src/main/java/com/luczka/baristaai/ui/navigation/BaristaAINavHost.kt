@@ -9,8 +9,6 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.luczka.baristaai.ui.screens.edit.EditRecipeEvent
 import com.luczka.baristaai.ui.screens.edit.EditRecipeRoute
-import com.luczka.baristaai.ui.screens.editgeneratedrecipe.EditGeneratedRecipeEvent
-import com.luczka.baristaai.ui.screens.editgeneratedrecipe.EditGeneratedRecipeRoute
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesEvent
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesRoute
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesSuccessEvent
@@ -123,11 +121,6 @@ fun BaristaAINavHost(
                             GeneratedRecipesEvent.NavigateToSuccess -> navController.navigate(
                                 Route.GeneratedRecipesSuccess
                             )
-                            is GeneratedRecipesEvent.NavigateToEditGeneratedRecipe -> navController.navigate(
-                                Route.EditGeneratedRecipe(
-                                    recipeId = event.recipeId
-                                )
-                            )
                             is GeneratedRecipesEvent.ShowMessage -> Unit
                         }
                     }
@@ -167,23 +160,6 @@ fun BaristaAINavHost(
                 )
             }
 
-            composable<Route.EditGeneratedRecipe> {
-                EditGeneratedRecipeRoute(
-                    onEvent = { event ->
-                        when (event) {
-                            EditGeneratedRecipeEvent.NavigateBack -> navController.popBackStack()
-                            EditGeneratedRecipeEvent.NavigateBackWithRefresh -> {
-                                navController.previousBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("refreshGeneratedRecipes", System.currentTimeMillis())
-                                navController.popBackStack()
-                            }
-                            is EditGeneratedRecipeEvent.ShowError -> Unit
-                            is EditGeneratedRecipeEvent.ShowMessage -> Unit
-                        }
-                    }
-                )
-            }
 
             composable<Route.RecipeDetail> {
                 RecipeDetailRoute(

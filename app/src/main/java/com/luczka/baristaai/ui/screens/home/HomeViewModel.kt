@@ -148,7 +148,8 @@ class HomeViewModel @Inject constructor(
         val currentRecipes = if (reset) emptyList() else _uiState.value.recipes
         val offset = currentRecipes.size
         val filter = RecipeFilter(
-            brewMethodId = _uiState.value.selectedFilterId
+            brewMethodId = _uiState.value.selectedFilterId,
+            status = RecipeStatus.Saved
         )
         val page = PageRequest(limit = PAGE_SIZE, offset = offset)
         val sort = SortOption(field = "created_at", direction = SortDirection.DESC)
@@ -158,10 +159,12 @@ class HomeViewModel @Inject constructor(
                 val methodsMap = _uiState.value.filters
                     .filter { it.id != FilterUiState.ALL_FILTER_ID }
                     .associateBy { it.id }
-                val newItems = result.value
-                    .filter { it.status == RecipeStatus.Saved }
-                    .map { it.toUiState(methodsMap) }
-                val updatedRecipes = if (reset) newItems else currentRecipes + newItems
+                val newItems = result.value.map { it.toUiState(methodsMap) }
+                val updatedRecipes = if (reset) {
+                    newItems
+                } else {
+                    (currentRecipes + newItems).distinctBy { it.id }
+                }
                 updateState {
                     it.copy(
                         recipes = updatedRecipes,

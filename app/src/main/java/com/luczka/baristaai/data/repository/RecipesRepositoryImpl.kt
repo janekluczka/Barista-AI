@@ -62,7 +62,10 @@ class RecipesRepositoryImpl @Inject constructor(
                             SortDirection.DESC -> Order.DESCENDING
                         }
                     )
-                    limit(page.limit.toLong())
+                    range(
+                        from = page.offset.toLong(),
+                        to = (page.offset + page.limit - 1).toLong()
+                    )
                 }
                 .decodeList<RecipeDto>()
                 .map { it.toDomain() }
