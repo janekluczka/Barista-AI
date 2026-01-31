@@ -11,6 +11,8 @@ import com.luczka.baristaai.ui.screens.edit.EditRecipeEvent
 import com.luczka.baristaai.ui.screens.edit.EditRecipeRoute
 import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesEvent
 import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesRoute
+import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesSuccessEvent
+import com.luczka.baristaai.ui.screens.generated.GeneratedRecipesSuccessRoute
 import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
 import com.luczka.baristaai.ui.screens.generate.GenerateRecipeRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
@@ -113,10 +115,12 @@ fun BaristaAINavHost(
             composable<Route.GeneratedRecipes> {
                 val route = it.toRoute<Route.GeneratedRecipes>()
                 GeneratedRecipesRoute(
-                    requestId = route.requestId,
                     onEvent = { event ->
                         when (event) {
                             GeneratedRecipesEvent.NavigateBack -> navController.popBackStack()
+                            GeneratedRecipesEvent.NavigateToSuccess -> navController.navigate(
+                                Route.GeneratedRecipesSuccess
+                            )
                             is GeneratedRecipesEvent.NavigateToEditRecipe -> navController.navigate(
                                 Route.EditRecipe(
                                     mode = EditRecipeMode.DRAFT,
@@ -125,6 +129,22 @@ fun BaristaAINavHost(
                                 )
                             )
                             is GeneratedRecipesEvent.ShowMessage -> Unit
+                        }
+                    }
+                )
+            }
+
+            composable<Route.GeneratedRecipesSuccess> {
+                GeneratedRecipesSuccessRoute(
+                    onEvent = { event ->
+                        when (event) {
+                            GeneratedRecipesSuccessEvent.NavigateToHome -> {
+                                navController.navigate(Route.Home) {
+                                    popUpTo<Route.Home> {
+                                        inclusive = true
+                                    }
+                                }
+                            }
                         }
                     }
                 )

@@ -23,6 +23,9 @@ sealed interface Route {
     ) : Route
 
     @Serializable
+    data object GeneratedRecipesSuccess : Route
+
+    @Serializable
     data class EditRecipe(
         val mode: EditRecipeMode,
         val recipeId: String? = null,
