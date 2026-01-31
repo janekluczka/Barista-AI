@@ -15,6 +15,14 @@ class SupabaseDataSourceImpl @Inject constructor(
         return userId
     }
 
+    override suspend fun currentAccessToken(): String {
+        val accessToken = client.auth.currentSessionOrNull()?.accessToken
+        if (accessToken.isNullOrBlank()) {
+            throw UnauthorizedException("User is not authenticated.")
+        }
+        return accessToken
+    }
+
     override suspend fun signOut() {
         client.auth.signOut()
     }
