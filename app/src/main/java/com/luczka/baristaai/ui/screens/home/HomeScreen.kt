@@ -373,6 +373,7 @@ private fun RecipeList(
         items(recipes, key = { it.id }) { recipe ->
             RecipeCard(
                 recipe = recipe,
+                modifier = Modifier.animateItem(),
                 onClick = { onRecipeClick(recipe.id) }
             )
         }
@@ -394,10 +395,11 @@ private fun RecipeList(
 @Composable
 private fun RecipeCard(
     recipe: RecipeUiState,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         onClick = onClick
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

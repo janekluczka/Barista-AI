@@ -87,7 +87,6 @@ class HomeViewModel @Inject constructor(
         val selectedFilterId = filterId?.takeIf { it != FilterUiState.ALL_FILTER_ID }
         _uiState.value = _uiState.value.copy(
             selectedFilterId = selectedFilterId,
-            recipes = emptyList(),
             canLoadMore = true,
             isLoading = true,
             errorMessage = null
