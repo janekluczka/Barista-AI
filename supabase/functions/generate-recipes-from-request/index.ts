@@ -5,11 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type GenerateRecipesRequest = {
-  brew_method_id: string;
-  coffee_amount: number;
-  can_adjust_temperature: boolean;
-  user_comment?: string | null;
+type GenerateRecipesFromRequestPayload = {
+  generation_request_id: string;
 };
 
 type OpenRouterRecipe = {
@@ -249,27 +246,42 @@ Deno.serve(async (request) => {
       );
     }
 
-    const payload = (await request.json()) as GenerateRecipesRequest;
-    if (!payload?.brew_method_id || !isValidNumber(payload.coffee_amount)) {
+    const payload = (await request.json()) as GenerateRecipesFromRequestPayload;
+    if (!payload?.generation_request_id) {
       return new Response(
-        JSON.stringify({ error: "Invalid request payload." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    if (payload.coffee_amount <= 0 || typeof payload.can_adjust_temperature !== "boolean") {
-      return new Response(
-        JSON.stringify({ error: "Invalid coffee amount or temperature flag." }),
+        JSON.stringify({ error: "Missing generation_request_id." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+    const { data: generationRequest, error: requestError } = await adminClient
+      .from("generation_requests")
+      .select(
+        "id, user_id, brew_method_id, coffee_amount, can_adjust_temperature, user_comment, created_at",
+      )
+      .eq("id", payload.generation_request_id)
+      .maybeSingle();
+
+    if (requestError || !generationRequest) {
+      return new Response(
+        JSON.stringify({ error: "Generation request not found." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (generationRequest.user_id !== authData.user.id) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { data: brewMethod, error: brewMethodError } = await adminClient
       .from("brew_methods")
       .select("id, name")
-      .eq("id", payload.brew_method_id)
+      .eq("id", generationRequest.brew_method_id)
       .maybeSingle();
 
     if (brewMethodError || !brewMethod) {
@@ -279,32 +291,11 @@ Deno.serve(async (request) => {
       );
     }
 
-    const { data: generationRequest, error: insertRequestError } = await adminClient
-      .from("generation_requests")
-      .insert({
-        user_id: authData.user.id,
-        brew_method_id: payload.brew_method_id,
-        coffee_amount: payload.coffee_amount,
-        can_adjust_temperature: payload.can_adjust_temperature,
-        user_comment: payload.user_comment ?? null,
-      })
-      .select(
-        "id, user_id, brew_method_id, coffee_amount, can_adjust_temperature, user_comment, created_at",
-      )
-      .single();
-
-    if (insertRequestError || !generationRequest) {
-      return new Response(
-        JSON.stringify({ error: "Failed to create generation request." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const prompt = buildPrompt({
       brewMethodName: brewMethod.name,
-      coffeeAmount: payload.coffee_amount,
-      canAdjustTemperature: payload.can_adjust_temperature,
-      userComment: payload.user_comment ?? null,
+      coffeeAmount: generationRequest.coffee_amount,
+      canAdjustTemperature: generationRequest.can_adjust_temperature,
+      userComment: generationRequest.user_comment ?? null,
     });
 
     let openRouterPayload = await callOpenRouter({
@@ -324,7 +315,7 @@ Deno.serve(async (request) => {
     }
 
     let normalizedRecipes = openRouterPayload.recipes
-      .map((recipe) => normalizeRecipe(recipe, payload.can_adjust_temperature))
+      .map((recipe) => normalizeRecipe(recipe, generationRequest.can_adjust_temperature))
       .filter((recipe): recipe is OpenRouterRecipe => recipe !== null);
 
     if (normalizedRecipes.length !== 3) {
@@ -352,7 +343,7 @@ Deno.serve(async (request) => {
       }
 
       normalizedRecipes = openRouterPayload.recipes
-        .map((recipe) => normalizeRecipe(recipe, payload.can_adjust_temperature))
+        .map((recipe) => normalizeRecipe(recipe, generationRequest.can_adjust_temperature))
         .filter((recipe): recipe is OpenRouterRecipe => recipe !== null);
 
       if (normalizedRecipes.length !== 3 || !hasDistinctRecipes(normalizedRecipes)) {
@@ -369,7 +360,7 @@ Deno.serve(async (request) => {
         normalizedRecipes.map((recipe) => ({
           user_id: authData.user.id,
           generation_request_id: generationRequest.id,
-          brew_method_id: payload.brew_method_id,
+          brew_method_id: generationRequest.brew_method_id,
           coffee_amount: recipe.coffee_amount,
           water_amount: recipe.water_amount,
           ratio_coffee: recipe.ratio_coffee,

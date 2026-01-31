@@ -3,6 +3,7 @@ package com.luczka.baristaai.data.mapper
 import com.luczka.baristaai.data.models.CreateGenerationRequestCommand
 import com.luczka.baristaai.data.models.CreateGenerationRequestPayload
 import com.luczka.baristaai.data.models.GenerationRequestDto
+import com.luczka.baristaai.data.models.GenerateRecipesCommand
 import com.luczka.baristaai.data.models.UpdateGenerationRequestCommand
 import com.luczka.baristaai.domain.model.CreateGenerationRequest
 import com.luczka.baristaai.domain.model.GenerationRequest
@@ -26,6 +27,12 @@ fun CreateGenerationRequest.toCommand(): CreateGenerationRequestCommand {
         coffeeAmount = coffeeAmount,
         canAdjustTemperature = canAdjustTemperature,
         userComment = userComment
+    )
+}
+
+fun String.toGenerateRecipesCommand(): GenerateRecipesCommand {
+    return GenerateRecipesCommand(
+        generationRequestId = this
     )
 }
 

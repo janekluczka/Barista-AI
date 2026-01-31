@@ -15,6 +15,7 @@ import com.luczka.baristaai.domain.model.PageRequest
 import com.luczka.baristaai.domain.model.SortOption
 import com.luczka.baristaai.domain.model.UpdateGenerationRequest
 import com.luczka.baristaai.domain.repository.GenerationRequestsRepository
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
 import io.ktor.client.call.body
 import javax.inject.Inject
@@ -45,6 +46,9 @@ class GenerationRequestsRepositoryImpl @Inject constructor(
         input: CreateGenerationRequest
     ): RepositoryResult<GenerationRequest> {
         val result = runCatching {
+            // Ensure session is fresh to avoid "Invalid JWT" errors with Edge Functions
+            dataSource.client.auth.refreshCurrentSession()
+
             val command = input.toCommand()
             dataSource.client.functions.invoke(
                 function = "generate-recipes",
