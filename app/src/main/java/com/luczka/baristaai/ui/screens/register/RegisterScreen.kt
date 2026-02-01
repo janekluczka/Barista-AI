@@ -11,10 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,6 +43,7 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
 import com.luczka.baristaai.ui.components.ButtonWithLoader
+import com.luczka.baristaai.ui.components.icons.ArrowBackIcon
 import com.luczka.baristaai.ui.components.DividerWithText
 import com.luczka.baristaai.ui.components.GoogleSignInButton
 import kotlinx.coroutines.flow.collectLatest
@@ -134,10 +132,7 @@ fun RegisterScreen(
                 title = { Text(text = "Create account") },
                 navigationIcon = {
                     IconButton(onClick = { onAction(RegisterAction.NavigateToLogin) }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        ArrowBackIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

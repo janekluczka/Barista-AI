@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,6 +42,8 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
 import com.luczka.baristaai.ui.components.ButtonWithLoader
+import com.luczka.baristaai.ui.components.icons.VisibilityIcon
+import com.luczka.baristaai.ui.components.icons.VisibilityOffIcon
 import com.luczka.baristaai.ui.components.DividerWithText
 import com.luczka.baristaai.ui.components.GoogleSignInButton
 import kotlinx.coroutines.flow.collectLatest
@@ -180,21 +178,12 @@ fun LoginScreen(
                     PasswordVisualTransformation()
                 },
                 trailingIcon = {
-                    val icon = if (uiState.isPasswordVisible) {
-                        Icons.Default.VisibilityOff
-                    } else {
-                        Icons.Default.Visibility
-                    }
-                    val description = if (uiState.isPasswordVisible) {
-                        "Hide password"
-                    } else {
-                        "Show password"
-                    }
                     IconButton(onClick = { onAction(LoginAction.TogglePasswordVisibility) }) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = description
-                        )
+                        if (uiState.isPasswordVisible) {
+                            VisibilityOffIcon()
+                        } else {
+                            VisibilityIcon()
+                        }
                     }
                 },
                 keyboardOptions = KeyboardOptions(

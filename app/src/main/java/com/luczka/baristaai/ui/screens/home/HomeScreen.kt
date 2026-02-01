@@ -17,18 +17,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -57,6 +50,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.luczka.baristaai.ui.components.BottomSheetListItem
+import com.luczka.baristaai.ui.components.icons.AddIcon
+import com.luczka.baristaai.ui.components.icons.AutoAwesomeIcon
+import com.luczka.baristaai.ui.components.icons.EditOutlinedIcon
+import com.luczka.baristaai.ui.components.icons.ExitToAppIcon
+import com.luczka.baristaai.ui.components.icons.PersonIcon
 import com.luczka.baristaai.ui.screens.profile.ProfileAction
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileUiState
@@ -136,10 +134,7 @@ fun HomeScreen(
                                 .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile"
-                            )
+                            PersonIcon()
                         }
                     }
                 }
@@ -148,10 +143,7 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { onAction(HomeAction.OpenAddOptions) }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add recipe"
-                )
+                AddIcon()
             }
         }
     ) { padding ->
@@ -223,11 +215,7 @@ fun HomeScreen(
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "User avatar",
-                        modifier = Modifier.size(32.dp)
-                    )
+                    PersonIcon(modifier = Modifier.size(32.dp))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
@@ -248,10 +236,7 @@ fun HomeScreen(
                     BottomSheetListItem(
                         headlineText = "Log out",
                         leadingContent = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                                contentDescription = "Log out"
-                            )
+                            ExitToAppIcon()
                         },
                         color = MaterialTheme.colorScheme.error,
                         onClick = onLogoutClick
@@ -276,20 +261,14 @@ fun HomeScreen(
             BottomSheetListItem(
                 headlineText = "AI Assisted",
                 leadingContent = {
-                    Icon(
-                        imageVector = Icons.Outlined.AutoAwesome,
-                        contentDescription = "AI Assisted"
-                    )
+                    AutoAwesomeIcon()
                 },
                 onClick = { onAction(HomeAction.OpenGenerate) }
             )
             BottomSheetListItem(
                 headlineText = "Manual",
                 leadingContent = {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Manual"
-                    )
+                    EditOutlinedIcon()
                 },
                 onClick = { onAction(HomeAction.OpenManual) }
             )

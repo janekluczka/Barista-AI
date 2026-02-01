@@ -15,12 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -50,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.components.ButtonWithLoader
+import com.luczka.baristaai.ui.components.icons.ArrowBackIcon
+import com.luczka.baristaai.ui.components.icons.ArrowDropDownIcon
+import com.luczka.baristaai.ui.components.icons.InfoIcon
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import com.luczka.baristaai.ui.navigation.EditRecipeMode
 import kotlinx.coroutines.flow.collectLatest
@@ -111,7 +109,7 @@ fun EditRecipeScreen(
                 title = { Text(text = title) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(EditRecipeAction.NavigateBack) }) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        ArrowBackIcon()
                     }
                 }
             )
@@ -150,7 +148,7 @@ fun EditRecipeScreen(
                         }
                     },
                     trailingIcon = {
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
+                        ArrowDropDownIcon()
                     }
                 )
 
@@ -236,10 +234,7 @@ fun EditRecipeScreen(
                             },
                             state = rememberTooltipState()
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Water amount info"
-                            )
+                            InfoIcon()
                         }
                     },
                     supportingText = {

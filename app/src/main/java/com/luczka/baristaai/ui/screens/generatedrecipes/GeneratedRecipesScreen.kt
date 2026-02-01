@@ -17,17 +17,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -63,6 +57,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.components.ButtonWithLoader
+import com.luczka.baristaai.ui.components.icons.ArrowDropDownIcon
+import com.luczka.baristaai.ui.components.icons.CloseIcon
+import com.luczka.baristaai.ui.components.icons.EditOutlinedIcon
+import com.luczka.baristaai.ui.components.icons.InfoIcon
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
@@ -112,7 +110,7 @@ fun GeneratedRecipesScreen(
                         onClick = { onAction(GeneratedRecipesAction.ShowAbortDialog) },
                         enabled = !uiState.isSubmitting
                     ) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        CloseIcon()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -245,7 +243,7 @@ fun GeneratedRecipesScreen(
                         }
                     },
                     trailingIcon = {
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
+                        ArrowDropDownIcon()
                     }
                 )
                 OutlinedTextField(
@@ -327,10 +325,7 @@ fun GeneratedRecipesScreen(
                             },
                             state = rememberTooltipState()
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Water amount info"
-                            )
+                            InfoIcon()
                         }
                     },
                     isError = uiState.waterAmountError != null,
@@ -480,7 +475,7 @@ private fun GeneratedRecipeActions(
             modifier = Modifier.weight(1f)
         )
         OutlinedIconButton(onClick = onEdit) {
-            Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit recipe")
+            EditOutlinedIcon()
         }
     }
 }
