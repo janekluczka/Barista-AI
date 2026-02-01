@@ -9,5 +9,9 @@ data class HomeUiState(
     val recipes: List<RecipeUiState> = emptyList(),
     val errorMessage: String? = null,
     val isAddOptionSheetVisible: Boolean = false,
-    val isProfileSheetVisible: Boolean = false
+    val isProfileSheetVisible: Boolean = false,
+    val isLogoutDialogVisible: Boolean = false,
+    val profileEmail: String? = null,
+    val profileUserId: String? = null,
+    val isProfileLoading: Boolean = false
 )

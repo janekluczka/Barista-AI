@@ -7,18 +7,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.luczka.baristaai.ui.screens.edit.EditRecipeEvent
 import com.luczka.baristaai.ui.screens.edit.EditRecipeRoute
+import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
+import com.luczka.baristaai.ui.screens.generate.GenerateRecipeRoute
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesEvent
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesRoute
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesSuccessEvent
 import com.luczka.baristaai.ui.screens.generatedrecipes.GeneratedRecipesSuccessRoute
-import com.luczka.baristaai.ui.screens.generate.GenerateRecipeEvent
-import com.luczka.baristaai.ui.screens.generate.GenerateRecipeRoute
 import com.luczka.baristaai.ui.screens.home.HomeEvent
 import com.luczka.baristaai.ui.screens.home.HomeRoute
 import com.luczka.baristaai.ui.screens.login.LoginEvent
 import com.luczka.baristaai.ui.screens.login.LoginRoute
-import com.luczka.baristaai.ui.screens.profile.ProfileEvent
-import com.luczka.baristaai.ui.screens.profile.ProfileRoute
 import com.luczka.baristaai.ui.screens.recipedetails.RecipeDetailsEvent
 import com.luczka.baristaai.ui.screens.recipedetails.RecipeDetailsRoute
 import com.luczka.baristaai.ui.screens.register.RegisterEvent
@@ -168,18 +166,6 @@ fun MainAppNavHost(
                         )
                         is RecipeDetailsEvent.ShowError -> Unit
                         is RecipeDetailsEvent.ShowMessage -> Unit
-                    }
-                }
-            )
-        }
-
-        composable<Route.Profile> {
-            ProfileRoute(
-                onEvent = { event ->
-                    when (event) {
-                        ProfileEvent.NavigateBack -> navController.popBackStack()
-                        ProfileEvent.NavigateToLogin -> onNavigateToAuth()
-                        is ProfileEvent.ShowError -> Unit
                     }
                 }
             )

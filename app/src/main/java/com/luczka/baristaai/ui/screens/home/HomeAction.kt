@@ -11,4 +11,7 @@ sealed interface HomeAction {
     data object OpenGenerate : HomeAction
     data object OpenManual : HomeAction
     data class OpenRecipeDetails(val recipeId: String) : HomeAction
+    data object OpenLogoutDialog : HomeAction
+    data object DismissLogoutDialog : HomeAction
+    data object ConfirmLogout : HomeAction
 }

@@ -38,9 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,10 +53,6 @@ import com.luczka.baristaai.ui.components.icons.AutoAwesomeIcon
 import com.luczka.baristaai.ui.components.icons.EditOutlinedIcon
 import com.luczka.baristaai.ui.components.icons.ExitToAppIcon
 import com.luczka.baristaai.ui.components.icons.PersonIcon
-import com.luczka.baristaai.ui.screens.profile.ProfileAction
-import com.luczka.baristaai.ui.screens.profile.ProfileEvent
-import com.luczka.baristaai.ui.screens.profile.ProfileUiState
-import com.luczka.baristaai.ui.screens.profile.ProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.util.Locale
 
@@ -68,10 +62,7 @@ fun HomeRoute(
     onEvent: (HomeEvent) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val profileViewModel: ProfileViewModel = hiltViewModel()
-    val profileUiState by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var isLogoutDialogVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
@@ -82,43 +73,18 @@ fun HomeRoute(
         }
     }
 
-    LaunchedEffect(Unit) {
-        profileViewModel.event.collectLatest { event ->
-            when (event) {
-                is ProfileEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
-                ProfileEvent.NavigateToLogin -> onEvent(HomeEvent.NavigateToLogin)
-                ProfileEvent.NavigateBack -> Unit
-            }
-        }
-    }
-
     HomeScreen(
         uiState = uiState,
-        profileUiState = profileUiState,
         onAction = viewModel::handleAction,
-        onLogoutClick = { isLogoutDialogVisible = true },
         snackbarHostState = snackbarHostState
     )
-
-    if (isLogoutDialogVisible) {
-        LogoutConfirmationDialog(
-            onConfirm = {
-                isLogoutDialogVisible = false
-                viewModel.handleAction(HomeAction.DismissProfile)
-                profileViewModel.handleAction(ProfileAction.ConfirmLogout)
-            },
-            onDismiss = { isLogoutDialogVisible = false }
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
-    profileUiState: ProfileUiState,
     onAction: (HomeAction) -> Unit,
-    onLogoutClick: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -219,11 +185,11 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = profileUiState.email ?: "Email not available",
+                    text = uiState.profileEmail ?: "Email not available",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                if (profileUiState.isLoading) {
+                if (uiState.isProfileLoading) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -239,7 +205,7 @@ fun HomeScreen(
                             ExitToAppIcon()
                         },
                         color = MaterialTheme.colorScheme.error,
-                        onClick = onLogoutClick
+                        onClick = { onAction(HomeAction.OpenLogoutDialog) }
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -274,6 +240,13 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    if (uiState.isLogoutDialogVisible) {
+        LogoutConfirmationDialog(
+            onConfirm = { onAction(HomeAction.ConfirmLogout) },
+            onDismiss = { onAction(HomeAction.DismissLogoutDialog) }
+        )
     }
 }
 
@@ -456,11 +429,10 @@ private fun HomeScreenEmptyPreview() {
                 FilterUiState(id = FilterUiState.ALL_FILTER_ID, label = "All recipes"),
                 FilterUiState(id = "v60", label = "V60"),
                 FilterUiState(id = "aeropress", label = "Aeropress")
-            )
+            ),
+            profileEmail = "alex@example.com"
         ),
-        profileUiState = ProfileUiState(email = "alex@example.com"),
         onAction = {},
-        onLogoutClick = {},
         snackbarHostState = SnackbarHostState()
     )
 }
@@ -475,11 +447,10 @@ private fun HomeScreenLoadingPreview() {
                 FilterUiState(id = FilterUiState.ALL_FILTER_ID, label = "All recipes"),
                 FilterUiState(id = "v60", label = "V60"),
                 FilterUiState(id = "aeropress", label = "Aeropress")
-            )
+            ),
+            profileEmail = "alex@example.com"
         ),
-        profileUiState = ProfileUiState(email = "alex@example.com"),
         onAction = {},
-        onLogoutClick = {},
         snackbarHostState = SnackbarHostState()
     )
 }

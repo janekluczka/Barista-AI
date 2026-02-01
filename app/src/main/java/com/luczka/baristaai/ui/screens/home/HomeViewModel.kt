@@ -11,8 +11,10 @@ import com.luczka.baristaai.domain.model.RecipeFilter
 import com.luczka.baristaai.domain.model.RecipeStatus
 import com.luczka.baristaai.domain.model.SortDirection
 import com.luczka.baristaai.domain.model.SortOption
+import com.luczka.baristaai.domain.usecase.GetCurrentUserUseCase
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
 import com.luczka.baristaai.domain.usecase.ListRecipesUseCase
+import com.luczka.baristaai.domain.usecase.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,7 +27,9 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val listBrewMethodsUseCase: ListBrewMethodsUseCase,
-    private val listRecipesUseCase: ListRecipesUseCase
+    private val listRecipesUseCase: ListRecipesUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
@@ -35,6 +39,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         handleAction(HomeAction.LoadRecipes)
+        loadProfile()
     }
 
     fun handleAction(action: HomeAction) {
@@ -51,6 +56,9 @@ class HomeViewModel @Inject constructor(
             is HomeAction.OpenRecipeDetails -> sendEvent(
                 HomeEvent.NavigateToRecipeDetails(action.recipeId)
             )
+            HomeAction.OpenLogoutDialog -> updateState { it.copy(isLogoutDialogVisible = true) }
+            HomeAction.DismissLogoutDialog -> updateState { it.copy(isLogoutDialogVisible = false) }
+            HomeAction.ConfirmLogout -> confirmLogout()
         }
     }
 
@@ -212,6 +220,53 @@ class HomeViewModel @Inject constructor(
             waterAmount = waterAmount,
             temperature = temperature
         )
+    }
+
+    private fun loadProfile() {
+        updateState { it.copy(isProfileLoading = true) }
+        viewModelScope.launch {
+            when (val result = getCurrentUserUseCase()) {
+                is RepositoryResult.Success -> {
+                    updateState {
+                        it.copy(
+                            isProfileLoading = false,
+                            profileEmail = result.value?.email,
+                            profileUserId = result.value?.id
+                        )
+                    }
+                }
+                is RepositoryResult.Failure -> {
+                    updateState { it.copy(isProfileLoading = false) }
+                    sendEvent(HomeEvent.ShowError(mapProfileError(result.error)))
+                }
+            }
+        }
+    }
+
+    private fun confirmLogout() {
+        updateState { it.copy(isProfileLoading = true, isProfileSheetVisible = false, isLogoutDialogVisible = false) }
+        viewModelScope.launch {
+            when (val result = signOutUseCase()) {
+                is RepositoryResult.Success -> {
+                    updateState { it.copy(isProfileLoading = false) }
+                    sendEvent(HomeEvent.NavigateToLogin)
+                }
+                is RepositoryResult.Failure -> {
+                    updateState { it.copy(isProfileLoading = false) }
+                    sendEvent(HomeEvent.ShowError(mapProfileError(result.error)))
+                }
+            }
+        }
+    }
+
+    private fun mapProfileError(error: RepositoryError): String {
+        return when (error) {
+            is RepositoryError.Network -> "Network error. Check your connection."
+            is RepositoryError.Unauthorized -> "You are not signed in."
+            is RepositoryError.NotFound -> error.message
+            is RepositoryError.Validation -> error.message
+            is RepositoryError.Unknown -> error.message
+        }
     }
 
     private companion object {
