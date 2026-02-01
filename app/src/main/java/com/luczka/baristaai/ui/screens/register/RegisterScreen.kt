@@ -13,8 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
+import com.luczka.baristaai.ui.components.ButtonWithLoader
 import com.luczka.baristaai.ui.components.DividerWithText
 import com.luczka.baristaai.ui.components.GoogleSignInButton
 import kotlinx.coroutines.flow.collectLatest
@@ -237,23 +236,14 @@ fun RegisterScreen(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
             }
-            Button(
+            ButtonWithLoader(
+                text = "Create account",
                 onClick = { onAction(RegisterAction.SubmitRegister) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
-                enabled = !uiState.isLoading
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.height(18.dp)
-                    )
-                } else {
-                    Text(text = "Create account")
-                }
-            }
+                isLoading = uiState.isLoading
+            )
         }
     }
 }

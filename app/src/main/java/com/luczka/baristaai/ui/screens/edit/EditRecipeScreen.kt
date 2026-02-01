@@ -16,10 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.luczka.baristaai.ui.components.BottomSheetListItem
+import com.luczka.baristaai.ui.components.ButtonWithLoader
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import com.luczka.baristaai.ui.navigation.EditRecipeMode
 import kotlinx.coroutines.flow.collectLatest
@@ -111,7 +111,7 @@ fun EditRecipeScreen(
                 title = { Text(text = title) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(EditRecipeAction.NavigateBack) }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -293,15 +293,15 @@ fun EditRecipeScreen(
                 )
             }
 
-            Button(
+            ButtonWithLoader(
+                text = submitLabel,
                 onClick = { onAction(EditRecipeAction.Submit) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
-                enabled = uiState.isSubmitEnabled && !uiState.isLoading
-            ) {
-                Text(text = submitLabel)
-            }
+                enabled = uiState.isSubmitEnabled,
+                isLoading = uiState.isLoading
+            )
         }
     }
 
