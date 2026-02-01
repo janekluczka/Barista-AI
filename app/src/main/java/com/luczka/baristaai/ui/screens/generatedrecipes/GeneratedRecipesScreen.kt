@@ -1,9 +1,11 @@
 package com.luczka.baristaai.ui.screens.generatedrecipes
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,20 +17,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Scaffold
@@ -36,8 +41,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,13 +54,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.luczka.baristaai.ui.components.BottomSheetListItem
 import com.luczka.baristaai.ui.components.textfields.ClickableOutlinedTextField
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun GeneratedRecipesRoute(
@@ -175,11 +187,14 @@ fun GeneratedRecipesScreen(
         }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = padding.calculateTopPadding() + 12.dp,
+                bottom = padding.calculateBottomPadding() + 12.dp
+            )
         ) {
             items(uiState.recipes, key = { it.id }) { recipe ->
                 GeneratedRecipeCard(
@@ -227,7 +242,6 @@ fun GeneratedRecipesScreen(
                     text = "Edit generated recipe",
                     style = MaterialTheme.typography.titleMedium
                 )
-                Text(text = "Brew method", style = MaterialTheme.typography.titleSmall)
                 ClickableOutlinedTextField(
                     value = uiState.selectedBrewMethodName.orEmpty(),
                     onClick = { onAction(GeneratedRecipesAction.OpenEditBrewMethodSheet) },
@@ -238,6 +252,9 @@ fun GeneratedRecipesScreen(
                         if (uiState.brewMethodError != null) {
                             Text(text = uiState.brewMethodError)
                         }
+                    },
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Open")
                     }
                 )
                 OutlinedTextField(
@@ -256,10 +273,9 @@ fun GeneratedRecipesScreen(
                         }
                     }
                 )
-                Text(text = "Ratio coffee : Ratio water", style = MaterialTheme.typography.titleSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     OutlinedTextField(
                         value = uiState.ratioCoffeeInput,
@@ -276,6 +292,11 @@ fun GeneratedRecipesScreen(
                                 Text(text = uiState.ratioCoffeeError)
                             }
                         }
+                    )
+                    Text(
+                        text = ":",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     OutlinedTextField(
                         value = uiState.ratioWaterInput,
@@ -303,7 +324,24 @@ fun GeneratedRecipesScreen(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
                     ),
-                    enabled = false,
+                    readOnly = true,
+                    interactionSource = rememberNoInteractionSource(),
+                    trailingIcon = {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text(text = "Calculated from coffee amount and ratio.")
+                                }
+                            },
+                            state = rememberTooltipState()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Water amount info"
+                            )
+                        }
+                    },
                     isError = uiState.waterAmountError != null,
                     supportingText = {
                         if (uiState.waterAmountError != null) {
@@ -331,7 +369,8 @@ fun GeneratedRecipesScreen(
                     value = uiState.assistantTipInput,
                     onValueChange = { onAction(GeneratedRecipesAction.UpdateEditAssistantTip(it)) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = "Assistant tip (optional)") },
+                    label = { Text(text = "Comment*") },
+                    supportingText = { Text(text = "*Optional") },
                     minLines = 3
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -367,20 +406,16 @@ fun GeneratedRecipesScreen(
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(uiState.brewMethods, key = { it.id }) { method ->
                         val isSelected = method.id == uiState.selectedBrewMethodId
-                        ListItem(
-                            headlineContent = { Text(text = method.name) },
-                            supportingContent = { Text(text = method.slug) },
+                        BottomSheetListItem(
+                            headlineText = method.name,
                             trailingContent = {
-                                androidx.compose.material3.RadioButton(
+                                RadioButton(
                                     selected = isSelected,
                                     onClick = { onAction(GeneratedRecipesAction.SelectEditBrewMethod(method.id)) }
                                 )
                             },
-                            modifier = Modifier.clickable {
-                                onAction(GeneratedRecipesAction.SelectEditBrewMethod(method.id))
-                            }
+                            onClick = { onAction(GeneratedRecipesAction.SelectEditBrewMethod(method.id)) }
                         )
-                        Divider()
                     }
                 }
             }
@@ -395,18 +430,16 @@ private fun GeneratedRecipeCard(
     onSelectionChange: (RecipeSelection) -> Unit,
     onEdit: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = recipe.title, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Coffee: ${recipe.coffeeAmount} • Water: ${recipe.waterAmount}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Ratio: ${recipe.ratio} • Temp: ${recipe.temperature}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                MetricRow(label = "Coffee", value = recipe.coffeeAmount)
+                MetricRow(label = "Ratio", value = recipe.ratio)
+                MetricRow(label = "Water", value = recipe.waterAmount)
+                MetricRow(label = "Temperature", value = recipe.temperature)
+            }
             if (!recipe.assistantTip.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -416,37 +449,68 @@ private fun GeneratedRecipeCard(
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val isAccepted = recipe.selection == RecipeSelection.Accept
-                val isRejected = recipe.selection == RecipeSelection.Reject
-
-                OutlinedSelectionButton(
-                    label = "Accept",
-                    isSelected = isAccepted,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    onClick = { onSelectionChange(RecipeSelection.Accept) },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedSelectionButton(
-                    label = "Reject",
-                    isSelected = isRejected,
-                    selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
-                    selectedContentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    onClick = { onSelectionChange(RecipeSelection.Reject) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            TextButton(
-                onClick = onEdit,
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(text = "Edit")
-            }
+            GeneratedRecipeActions(
+                recipe = recipe,
+                onSelectionChange = onSelectionChange,
+                onEdit = onEdit
+            )
         }
+    }
+}
+
+@Composable
+private fun GeneratedRecipeActions(
+    recipe: GeneratedRecipeCardUiState,
+    onSelectionChange: (RecipeSelection) -> Unit,
+    onEdit: () -> Unit
+) {
+    val isAccepted = recipe.selection == RecipeSelection.Accept
+    val isRejected = recipe.selection == RecipeSelection.Reject
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedSelectionButton(
+            label = "Accept",
+            isSelected = isAccepted,
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            onClick = { onSelectionChange(RecipeSelection.Accept) },
+            modifier = Modifier.weight(1f)
+        )
+        OutlinedSelectionButton(
+            label = "Reject",
+            isSelected = isRejected,
+            selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
+            selectedContentColor = MaterialTheme.colorScheme.onErrorContainer,
+            onClick = { onSelectionChange(RecipeSelection.Reject) },
+            modifier = Modifier.weight(1f)
+        )
+        OutlinedIconButton(onClick = onEdit) {
+            Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit recipe")
+        }
+    }
+}
+
+@Composable
+private fun MetricRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -488,10 +552,47 @@ private fun GeneratedRecipesScreenPreview() {
                     temperature = "94°C",
                     assistantTip = "Pour in slow circles for even extraction.",
                     selection = RecipeSelection.Accept
+                ),
+                GeneratedRecipeCardUiState(
+                    id = "2",
+                    title = "Aeropress Bright",
+                    coffeeAmount = "15 g",
+                    waterAmount = "240 g",
+                    ratio = "1:16",
+                    temperature = "92°C",
+                    assistantTip = "Press slowly to avoid bitterness.",
+                    selection = RecipeSelection.Reject
+                ),
+                GeneratedRecipeCardUiState(
+                    id = "3",
+                    title = "Chemex Clean",
+                    coffeeAmount = "30 g",
+                    waterAmount = "500 g",
+                    ratio = "1:17",
+                    temperature = "93°C",
+                    assistantTip = "Keep the slurry level steady.",
+                    selection = RecipeSelection.None
                 )
             )
         ),
         onAction = {},
         snackbarHostState = SnackbarHostState()
     )
+}
+
+@Composable
+private fun rememberNoInteractionSource(): MutableInteractionSource {
+    return remember {
+        object : MutableInteractionSource {
+            override val interactions = emptyFlow<Interaction>()
+
+            override suspend fun emit(interaction: Interaction) {
+                // No-op to avoid emitting interactions.
+            }
+
+            override fun tryEmit(interaction: Interaction): Boolean {
+                return false
+            }
+        }
+    }
 }
