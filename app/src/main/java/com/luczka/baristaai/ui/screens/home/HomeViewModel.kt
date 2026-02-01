@@ -162,7 +162,7 @@ class HomeViewModel @Inject constructor(
         val offset = currentRecipes.size
         val filter = RecipeFilter(
             brewMethodId = _uiState.value.selectedFilterId,
-            status = RecipeStatus.Saved
+            statusIn = listOf(RecipeStatus.Saved, RecipeStatus.Edited)
         )
         val page = PageRequest(limit = PAGE_SIZE, offset = offset)
         val sort = SortOption(field = "created_at", direction = SortDirection.DESC)

@@ -47,13 +47,22 @@ class RecipesRepositoryImpl @Inject constructor(
                     filter {
                         filter.brewMethodId?.let { eq("brew_method_id", it) }
                         filter.generationRequestId?.let { eq("generation_request_id", it) }
-                        filter.status?.let { eq("status", it.toDto().toQueryValue()) }
+                        when {
+                            filter.statusIn != null && filter.statusIn!!.isNotEmpty() -> {
+                                isIn(
+                                    "status",
+                                    filter.statusIn!!.map { it.toDto().toQueryValue() }
+                                )
+                            }
+                            filter.status != null -> {
+                                eq("status", filter.status!!.toDto().toQueryValue())
+                            }
+                            else -> {
+                                neq("status", RecipeStatus.Deleted.toDto().toQueryValue())
+                            }
+                        }
                         filter.createdAfterIso?.let { gte("created_at", it) }
                         filter.createdBeforeIso?.let { lte("created_at", it) }
-
-                        if (filter.status == null) {
-                            neq("status", RecipeStatus.Deleted.toDto().toQueryValue())
-                        }
                     }
                     order(
                         column = sort.field,
