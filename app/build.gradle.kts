@@ -48,8 +48,15 @@ android {
         )
     }
 
+    signingConfigs {
+        getByName("debug") {
+            // Use the default debug keystore for now.
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
