@@ -48,8 +48,8 @@ class HomeViewModel @Inject constructor(
             HomeAction.DismissAddOptions -> updateState { it.copy(isAddOptionSheetVisible = false) }
             HomeAction.OpenGenerate -> openGenerate()
             HomeAction.OpenManual -> openManual()
-            is HomeAction.OpenRecipeDetail -> sendEvent(
-                HomeEvent.NavigateToRecipeDetail(action.recipeId)
+            is HomeAction.OpenRecipeDetails -> sendEvent(
+                HomeEvent.NavigateToRecipeDetails(action.recipeId)
             )
         }
     }

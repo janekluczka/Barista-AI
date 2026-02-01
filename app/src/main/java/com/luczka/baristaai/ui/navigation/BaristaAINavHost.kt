@@ -19,8 +19,8 @@ import com.luczka.baristaai.ui.screens.login.LoginEvent
 import com.luczka.baristaai.ui.screens.login.LoginRoute
 import com.luczka.baristaai.ui.screens.profile.ProfileEvent
 import com.luczka.baristaai.ui.screens.profile.ProfileRoute
-import com.luczka.baristaai.ui.screens.recipe_detail.RecipeDetailEvent
-import com.luczka.baristaai.ui.screens.recipe_detail.RecipeDetailRoute
+import com.luczka.baristaai.ui.screens.recipedetails.RecipeDetailsEvent
+import com.luczka.baristaai.ui.screens.recipedetails.RecipeDetailsRoute
 import com.luczka.baristaai.ui.screens.register.RegisterEvent
 import com.luczka.baristaai.ui.screens.register.RegisterRoute
 
@@ -78,8 +78,8 @@ fun MainAppNavHost(
                         HomeEvent.NavigateToManual -> navController.navigate(
                             Route.EditRecipe(mode = EditRecipeMode.MANUAL)
                         )
-                        is HomeEvent.NavigateToRecipeDetail -> navController.navigate(
-                            Route.RecipeDetail(recipeId = event.recipeId)
+                        is HomeEvent.NavigateToRecipeDetails -> navController.navigate(
+                            Route.RecipeDetails(recipeId = event.recipeId)
                         )
                         HomeEvent.NavigateToLogin -> onNavigateToAuth()
                         is HomeEvent.ShowError -> Unit
@@ -150,24 +150,24 @@ fun MainAppNavHost(
         }
 
 
-        composable<Route.RecipeDetail> {
-            RecipeDetailRoute(
+        composable<Route.RecipeDetails> {
+            RecipeDetailsRoute(
                 onEvent = { event ->
                     when (event) {
-                        RecipeDetailEvent.NavigateBack -> navController.popBackStack()
-                        RecipeDetailEvent.NavigateToHome -> navController.navigate(Route.Home) {
+                        RecipeDetailsEvent.NavigateBack -> navController.popBackStack()
+                        RecipeDetailsEvent.NavigateToHome -> navController.navigate(Route.Home) {
                             popUpTo<Route.Home> {
                                 inclusive = true
                             }
                         }
-                        is RecipeDetailEvent.NavigateToEdit -> navController.navigate(
+                        is RecipeDetailsEvent.NavigateToEdit -> navController.navigate(
                             Route.EditRecipe(
                                 mode = EditRecipeMode.SAVED,
                                 recipeId = event.recipeId
                             )
                         )
-                        is RecipeDetailEvent.ShowError -> Unit
-                        is RecipeDetailEvent.ShowMessage -> Unit
+                        is RecipeDetailsEvent.ShowError -> Unit
+                        is RecipeDetailsEvent.ShowMessage -> Unit
                     }
                 }
             )

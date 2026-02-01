@@ -1,4 +1,4 @@
-package com.luczka.baristaai.ui.screens.recipe_detail
+package com.luczka.baristaai.ui.screens.recipedetails
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -19,34 +19,34 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class RecipeDetailViewModel @Inject constructor(
+class RecipeDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getRecipeUseCase: GetRecipeUseCase,
     private val listBrewMethodsUseCase: ListBrewMethodsUseCase,
     private val deleteRecipeUseCase: DeleteRecipeUseCase
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<RecipeDetailUiState> =
-        MutableStateFlow(RecipeDetailUiState())
-    val uiState: StateFlow<RecipeDetailUiState> = _uiState
+    private val _uiState: MutableStateFlow<RecipeDetailsUiState> =
+        MutableStateFlow(RecipeDetailsUiState())
+    val uiState: StateFlow<RecipeDetailsUiState> = _uiState
 
-    private val _event: MutableSharedFlow<RecipeDetailEvent> = MutableSharedFlow(extraBufferCapacity = 1)
-    val event: SharedFlow<RecipeDetailEvent> = _event.asSharedFlow()
+    private val _event: MutableSharedFlow<RecipeDetailsEvent> = MutableSharedFlow(extraBufferCapacity = 1)
+    val event: SharedFlow<RecipeDetailsEvent> = _event.asSharedFlow()
 
     init {
         val recipeId = savedStateHandle.get<String>("recipeId")
         updateState { it.copy(recipeId = recipeId) }
-        handleAction(RecipeDetailAction.Load)
+        handleAction(RecipeDetailsAction.Load)
     }
 
-    fun handleAction(action: RecipeDetailAction) {
+    fun handleAction(action: RecipeDetailsAction) {
         when (action) {
-            RecipeDetailAction.Load -> loadRecipe()
-            RecipeDetailAction.Retry -> loadRecipe()
-            RecipeDetailAction.NavigateBack -> sendEvent(RecipeDetailEvent.NavigateBack)
-            RecipeDetailAction.Edit -> navigateToEdit()
-            RecipeDetailAction.DeleteClick -> updateState { it.copy(isDeleteDialogVisible = true) }
-            RecipeDetailAction.DismissDelete -> updateState { it.copy(isDeleteDialogVisible = false) }
-            RecipeDetailAction.ConfirmDelete -> confirmDelete()
+            RecipeDetailsAction.Load -> loadRecipe()
+            RecipeDetailsAction.Retry -> loadRecipe()
+            RecipeDetailsAction.NavigateBack -> sendEvent(RecipeDetailsEvent.NavigateBack)
+            RecipeDetailsAction.Edit -> navigateToEdit()
+            RecipeDetailsAction.DeleteClick -> updateState { it.copy(isDeleteDialogVisible = true) }
+            RecipeDetailsAction.DismissDelete -> updateState { it.copy(isDeleteDialogVisible = false) }
+            RecipeDetailsAction.ConfirmDelete -> confirmDelete()
         }
     }
 
@@ -54,7 +54,7 @@ class RecipeDetailViewModel @Inject constructor(
         val recipeId = _uiState.value.recipeId
         if (recipeId.isNullOrBlank()) {
             showError("Recipe not found.")
-            sendEvent(RecipeDetailEvent.NavigateBack)
+            sendEvent(RecipeDetailsEvent.NavigateBack)
             return
         }
         updateState { it.copy(isLoading = true, errorMessage = null) }
@@ -68,7 +68,7 @@ class RecipeDetailViewModel @Inject constructor(
             if (recipeResult is RepositoryResult.Failure) {
                 showError(resolveErrorMessage(recipeResult.error))
                 if (recipeResult.error is RepositoryError.NotFound) {
-                    sendEvent(RecipeDetailEvent.NavigateBack)
+                    sendEvent(RecipeDetailsEvent.NavigateBack)
                 }
                 return@launch
             }
@@ -76,8 +76,8 @@ class RecipeDetailViewModel @Inject constructor(
             val brewMethods = (brewMethodsResult as RepositoryResult.Success).value
             val recipe = (recipeResult as RepositoryResult.Success).value
             if (recipe.status == RecipeStatus.Deleted) {
-                sendEvent(RecipeDetailEvent.ShowMessage("This recipe was deleted."))
-                sendEvent(RecipeDetailEvent.NavigateBack)
+                sendEvent(RecipeDetailsEvent.ShowMessage("This recipe was deleted."))
+                sendEvent(RecipeDetailsEvent.NavigateBack)
                 updateState { it.copy(isLoading = false, recipe = null, brewMethodName = null) }
                 return@launch
             }
@@ -95,7 +95,7 @@ class RecipeDetailViewModel @Inject constructor(
 
     private fun navigateToEdit() {
         val recipeId = _uiState.value.recipeId ?: return
-        sendEvent(RecipeDetailEvent.NavigateToEdit(recipeId))
+        sendEvent(RecipeDetailsEvent.NavigateToEdit(recipeId))
     }
 
     private fun confirmDelete() {
@@ -112,8 +112,8 @@ class RecipeDetailViewModel @Inject constructor(
             when (val result = deleteRecipeUseCase(recipeId)) {
                 is RepositoryResult.Success -> {
                     updateState { it.copy(isDeleting = false, isDeleteDialogVisible = false) }
-                    sendEvent(RecipeDetailEvent.ShowMessage("Recipe deleted."))
-                    sendEvent(RecipeDetailEvent.NavigateToHome)
+                    sendEvent(RecipeDetailsEvent.ShowMessage("Recipe deleted."))
+                    sendEvent(RecipeDetailsEvent.NavigateToHome)
                 }
                 is RepositoryResult.Failure -> {
                     updateState { it.copy(isDeleting = false) }
@@ -125,14 +125,14 @@ class RecipeDetailViewModel @Inject constructor(
 
     private fun showError(message: String) {
         updateState { it.copy(isLoading = false, errorMessage = message) }
-        sendEvent(RecipeDetailEvent.ShowError(message))
+        sendEvent(RecipeDetailsEvent.ShowError(message))
     }
 
-    private fun updateState(reducer: (RecipeDetailUiState) -> RecipeDetailUiState) {
+    private fun updateState(reducer: (RecipeDetailsUiState) -> RecipeDetailsUiState) {
         _uiState.value = reducer(_uiState.value)
     }
 
-    private fun sendEvent(event: RecipeDetailEvent) {
+    private fun sendEvent(event: RecipeDetailsEvent) {
         viewModelScope.launch {
             _event.emit(event)
         }

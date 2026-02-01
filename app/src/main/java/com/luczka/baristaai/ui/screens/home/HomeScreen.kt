@@ -195,7 +195,7 @@ fun HomeScreen(
                 canLoadMore = uiState.canLoadMore,
                 modifier = Modifier.fillMaxSize(),
                 onRecipeClick = { recipeId ->
-                    onAction(HomeAction.OpenRecipeDetail(recipeId))
+                    onAction(HomeAction.OpenRecipeDetails(recipeId))
                 },
                 onLoadMore = {
                     onAction(HomeAction.LoadMore)

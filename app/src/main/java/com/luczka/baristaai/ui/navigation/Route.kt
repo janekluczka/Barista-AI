@@ -34,7 +34,7 @@ sealed interface Route {
 
 
     @Serializable
-    data class RecipeDetail(
+    data class RecipeDetails(
         val recipeId: String
     ) : Route
 

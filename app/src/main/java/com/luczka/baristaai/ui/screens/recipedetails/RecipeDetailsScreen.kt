@@ -1,4 +1,4 @@
-package com.luczka.baristaai.ui.screens.recipe_detail
+package com.luczka.baristaai.ui.screens.recipedetails
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,21 +34,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.luczka.baristaai.domain.model.Recipe
 import com.luczka.baristaai.domain.model.RecipeStatus
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
+import java.util.Locale
 
 @Composable
-fun RecipeDetailRoute(
-    viewModel: RecipeDetailViewModel = hiltViewModel(),
-    onEvent: (RecipeDetailEvent) -> Unit = {}
+fun RecipeDetailsRoute(
+    viewModel: RecipeDetailsViewModel = hiltViewModel(),
+    onEvent: (RecipeDetailsEvent) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -56,14 +54,14 @@ fun RecipeDetailRoute(
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                is RecipeDetailEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
-                is RecipeDetailEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
+                is RecipeDetailsEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+                is RecipeDetailsEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
                 else -> onEvent(event)
             }
         }
     }
 
-    RecipeDetailScreen(
+    RecipeDetailsScreen(
         uiState = uiState,
         onAction = viewModel::handleAction,
         snackbarHostState = snackbarHostState
@@ -72,9 +70,9 @@ fun RecipeDetailRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeDetailScreen(
-    uiState: RecipeDetailUiState,
-    onAction: (RecipeDetailAction) -> Unit,
+fun RecipeDetailsScreen(
+    uiState: RecipeDetailsUiState,
+    onAction: (RecipeDetailsAction) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -82,19 +80,19 @@ fun RecipeDetailScreen(
             TopAppBar(
                 title = { Text(text = "Recipe details") },
                 navigationIcon = {
-                    IconButton(onClick = { onAction(RecipeDetailAction.NavigateBack) }) {
+                    IconButton(onClick = { onAction(RecipeDetailsAction.NavigateBack) }) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(
-                        onClick = { onAction(RecipeDetailAction.Edit) },
+                        onClick = { onAction(RecipeDetailsAction.Edit) },
                         enabled = uiState.recipe != null && !uiState.isLoading
                     ) {
                         Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
                     }
                     IconButton(
-                        onClick = { onAction(RecipeDetailAction.DeleteClick) },
+                        onClick = { onAction(RecipeDetailsAction.DeleteClick) },
                         enabled = uiState.recipe != null && !uiState.isLoading
                     ) {
                         Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
@@ -132,7 +130,7 @@ fun RecipeDetailScreen(
                         color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { onAction(RecipeDetailAction.Retry) }) {
+                    Button(onClick = { onAction(RecipeDetailsAction.Retry) }) {
                         Text(text = "Retry")
                     }
                 }
@@ -147,49 +145,39 @@ fun RecipeDetailScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SectionTitle(text = "Brew method")
-            Text(text = uiState.brewMethodName ?: recipe.brewMethodId)
-
             SectionTitle(text = "Parameters")
-            DetailRow(label = "Coffee", value = "${formatAmount(recipe.coffeeAmount)} g")
-            DetailRow(label = "Water", value = "${formatAmount(recipe.waterAmount)} g")
-            DetailRow(
-                label = "Ratio",
-                value = "${recipe.ratioCoffee}:${recipe.ratioWater}"
-            )
-            DetailRow(label = "Temperature", value = "${recipe.temperature}°C")
+            MetricRow(label = "Method", value = uiState.brewMethodName ?: "Unknown")
+            MetricRow(label = "Coffee", value = "${formatAmount(recipe.coffeeAmount)} g")
+            MetricRow(label = "Ratio", value = "${recipe.ratioCoffee}:${recipe.ratioWater}")
+            MetricRow(label = "Water", value = "${formatAmount(recipe.waterAmount)} g")
+            MetricRow(label = "Temperature", value = "${recipe.temperature}°C")
 
             if (!recipe.assistantTip.isNullOrBlank()) {
                 SectionTitle(text = "Assistant tip")
                 Text(
-                    text = recipe.assistantTip.orEmpty(),
+                    text = recipe.assistantTip,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            SectionTitle(text = "Meta")
-            DetailRow(label = "Status", value = recipe.status.toLabel())
-            DetailRow(label = "Created", value = formatDateTime(recipe.createdAt))
-            DetailRow(label = "Updated", value = formatDateTime(recipe.updatedAt))
         }
     }
 
     if (uiState.isDeleteDialogVisible) {
         AlertDialog(
-            onDismissRequest = { onAction(RecipeDetailAction.DismissDelete) },
+            onDismissRequest = { onAction(RecipeDetailsAction.DismissDelete) },
             title = { Text(text = "Delete recipe?") },
             text = { Text(text = "This action cannot be undone.") },
             confirmButton = {
                 TextButton(
-                    onClick = { onAction(RecipeDetailAction.ConfirmDelete) },
+                    onClick = { onAction(RecipeDetailsAction.ConfirmDelete) },
                     enabled = !uiState.isDeleting
                 ) {
                     Text(text = if (uiState.isDeleting) "Deleting..." else "Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(RecipeDetailAction.DismissDelete) }) {
+                TextButton(onClick = { onAction(RecipeDetailsAction.DismissDelete) }) {
                     Text(text = "Cancel")
                 }
             }
@@ -206,20 +194,22 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-private fun RecipeStatus.toLabel(): String {
-    return when (this) {
-        RecipeStatus.Draft -> "Draft"
-        RecipeStatus.Saved -> "Saved"
-        RecipeStatus.Edited -> "Edited"
-        RecipeStatus.Rejected -> "Rejected"
-        RecipeStatus.Deleted -> "Deleted"
+private fun MetricRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -227,20 +217,11 @@ private fun formatAmount(value: Double): String {
     return String.format(Locale.getDefault(), "%.1f", value)
 }
 
-private fun formatDateTime(value: String): String {
-    return runCatching {
-        val instant = Instant.parse(value)
-        val zoned = instant.atZone(ZoneId.systemDefault())
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.getDefault())
-        formatter.format(zoned)
-    }.getOrDefault(value)
-}
-
 @Preview(showBackground = true)
 @Composable
-private fun RecipeDetailPreview() {
-    RecipeDetailScreen(
-        uiState = RecipeDetailUiState(
+private fun RecipeDetailsPreview() {
+    RecipeDetailsScreen(
+        uiState = RecipeDetailsUiState(
             recipe = Recipe(
                 id = "1",
                 userId = "user",
