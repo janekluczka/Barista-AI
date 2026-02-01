@@ -76,6 +76,9 @@ class GeneratedRecipesViewModel @Inject constructor(
             GeneratedRecipesAction.ShowAbortDialog -> showAbortDialog()
             GeneratedRecipesAction.DismissAbortDialog -> dismissAbortDialog()
             GeneratedRecipesAction.ConfirmAbort -> confirmAbort()
+            GeneratedRecipesAction.Retry -> {
+                _uiState.value.requestId?.let { initialize(it) }
+            }
             GeneratedRecipesAction.NavigateBack -> sendEvent(GeneratedRecipesEvent.NavigateBack)
         }
     }
@@ -92,7 +95,11 @@ class GeneratedRecipesViewModel @Inject constructor(
         viewModelScope.launch {
             val brewMethodsResult = listBrewMethodsUseCase()
             if (brewMethodsResult is RepositoryResult.Failure) {
-                showError(resolveErrorMessage(brewMethodsResult.error))
+                val error = brewMethodsResult.error
+                showError(
+                    resolveErrorMessage(error),
+                    if (error.isRetryable) GeneratedRecipesAction.Retry else null
+                )
                 return@launch
             }
 
@@ -104,7 +111,11 @@ class GeneratedRecipesViewModel @Inject constructor(
             val sort = SortOption(field = "created_at", direction = SortDirection.DESC)
             val recipesResult = listRecipesUseCase(filter, page, sort)
             if (recipesResult is RepositoryResult.Failure) {
-                showError(resolveErrorMessage(recipesResult.error))
+                val error = recipesResult.error
+                showError(
+                    resolveErrorMessage(error),
+                    if (error.isRetryable) GeneratedRecipesAction.Retry else null
+                )
                 return@launch
             }
 
@@ -563,9 +574,13 @@ class GeneratedRecipesViewModel @Inject constructor(
         }
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String, retryAction: GeneratedRecipesAction? = null) {
         updateState { it.copy(isLoading = false, errorMessage = message) }
-        sendEvent(GeneratedRecipesEvent.ShowMessage(message))
+        if (retryAction != null) {
+            sendEvent(GeneratedRecipesEvent.ShowError(message, retryAction))
+        } else {
+            sendEvent(GeneratedRecipesEvent.ShowMessage(message))
+        }
     }
 
     private fun resolveErrorMessage(error: RepositoryError): String {

@@ -47,7 +47,7 @@ class GenerationRequestsRepositoryImpl @Inject constructor(
         val result = runCatching {
             val command = input.toCommand()
             dataSource.client.functions.invoke(
-                function = "generate-recipes",
+                function = "generate-recipes-en",
                 body = command,
             ).body<GenerateRecipesResponseDto>()
                 .generationRequest

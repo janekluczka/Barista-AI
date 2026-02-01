@@ -9,5 +9,7 @@ sealed interface GenerateRecipeAction {
     data class UpdateCanAdjustTemperature(val canAdjustTemperature: Boolean) : GenerateRecipeAction
     data class UpdateUserComment(val userComment: String) : GenerateRecipeAction
     data object SubmitRequest : GenerateRecipeAction
+    data object RetryLoadData : GenerateRecipeAction
+    data object RetrySubmitRequest : GenerateRecipeAction
     data object NavigateBack : GenerateRecipeAction
 }

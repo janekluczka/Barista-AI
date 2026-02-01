@@ -37,6 +37,8 @@ class GenerateRecipeViewModel @Inject constructor(
     fun handleAction(action: GenerateRecipeAction) {
         when (action) {
             GenerateRecipeAction.LoadData -> loadBrewMethods()
+            GenerateRecipeAction.RetryLoadData -> loadBrewMethods()
+            GenerateRecipeAction.RetrySubmitRequest -> submitRequest()
             GenerateRecipeAction.OpenBrewMethodSheet -> showBrewMethodSheet()
             GenerateRecipeAction.DismissBrewMethodSheet -> hideBrewMethodSheet()
             is GenerateRecipeAction.SelectBrewMethod -> selectBrewMethod(action.brewMethodId)
@@ -72,7 +74,12 @@ class GenerateRecipeViewModel @Inject constructor(
                             errorMessage = "Failed to load brew methods."
                         )
                     }
-                    sendEvent(GenerateRecipeEvent.ShowError("Failed to load brew methods."))
+                    sendEvent(
+                        GenerateRecipeEvent.ShowError(
+                            "Failed to load brew methods.",
+                            if (result.error.isRetryable) GenerateRecipeAction.RetryLoadData else null
+                        )
+                    )
                 }
             }
         }
@@ -120,7 +127,7 @@ class GenerateRecipeViewModel @Inject constructor(
         if (!networkMonitor.isOnline()) {
             val message = "No internet connection."
             updateState { state -> state.copy(errorMessage = message) }
-            sendEvent(GenerateRecipeEvent.ShowError(message))
+            sendEvent(GenerateRecipeEvent.ShowError(message, GenerateRecipeAction.RetrySubmitRequest))
             return
         }
 
@@ -233,6 +240,11 @@ class GenerateRecipeViewModel @Inject constructor(
                 errorMessage = message
             )
         }
-        sendEvent(GenerateRecipeEvent.ShowError(message))
+        sendEvent(
+            GenerateRecipeEvent.ShowError(
+                message,
+                if (error.isRetryable) GenerateRecipeAction.RetrySubmitRequest else null
+            )
+        )
     }
 }

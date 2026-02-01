@@ -1,7 +1,5 @@
 package com.luczka.baristaai.ui.screens.edit
 
-import com.luczka.baristaai.ui.navigation.EditRecipeMode
-
 sealed interface EditRecipeAction {
     data object NavigateBack : EditRecipeAction
 
@@ -18,4 +16,6 @@ sealed interface EditRecipeAction {
     data class UpdateAssistantTip(val value: String) : EditRecipeAction
 
     data object Submit : EditRecipeAction
+    data object Retry : EditRecipeAction
+    data object RetryLoad : EditRecipeAction
 }

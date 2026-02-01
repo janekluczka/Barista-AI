@@ -9,4 +9,7 @@ sealed interface RepositoryError {
         val message: String,
         val cause: Throwable? = null
     ) : RepositoryError
+
+    val isRetryable: Boolean
+        get() = this is Network || this is Unknown
 }

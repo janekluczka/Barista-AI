@@ -20,5 +20,6 @@ sealed interface GeneratedRecipesAction {
     data object ShowAbortDialog : GeneratedRecipesAction
     data object DismissAbortDialog : GeneratedRecipesAction
     data object ConfirmAbort : GeneratedRecipesAction
+    data object Retry : GeneratedRecipesAction
     data object NavigateBack : GeneratedRecipesAction
 }

@@ -10,13 +10,13 @@ import com.luczka.baristaai.domain.usecase.DeleteRecipeUseCase
 import com.luczka.baristaai.domain.usecase.GetRecipeUseCase
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class RecipeDetailsViewModel @Inject constructor(
@@ -42,6 +42,7 @@ class RecipeDetailsViewModel @Inject constructor(
         when (action) {
             RecipeDetailsAction.Load -> loadRecipe()
             RecipeDetailsAction.Retry -> loadRecipe()
+            RecipeDetailsAction.RetryDelete -> confirmDelete()
             RecipeDetailsAction.NavigateBack -> sendEvent(RecipeDetailsEvent.NavigateBack)
             RecipeDetailsAction.Edit -> navigateToEdit()
             RecipeDetailsAction.DeleteClick -> updateState { it.copy(isDeleteDialogVisible = true) }
@@ -61,13 +62,21 @@ class RecipeDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             val brewMethodsResult = listBrewMethodsUseCase()
             if (brewMethodsResult is RepositoryResult.Failure) {
-                showError("Failed to load brew methods.")
+                val error = brewMethodsResult.error
+                showError(
+                    "Failed to load brew methods.",
+                    if (error.isRetryable) RecipeDetailsAction.Retry else null
+                )
                 return@launch
             }
             val recipeResult = getRecipeUseCase(recipeId)
             if (recipeResult is RepositoryResult.Failure) {
-                showError(resolveErrorMessage(recipeResult.error))
-                if (recipeResult.error is RepositoryError.NotFound) {
+                val error = recipeResult.error
+                showError(
+                    resolveErrorMessage(error),
+                    if (error.isRetryable) RecipeDetailsAction.Retry else null
+                )
+                if (error is RepositoryError.NotFound) {
                     sendEvent(RecipeDetailsEvent.NavigateBack)
                 }
                 return@launch
@@ -117,15 +126,18 @@ class RecipeDetailsViewModel @Inject constructor(
                 }
                 is RepositoryResult.Failure -> {
                     updateState { it.copy(isDeleting = false) }
-                    showError(resolveErrorMessage(result.error))
+                    showError(
+                        resolveErrorMessage(result.error),
+                        if (result.error.isRetryable) RecipeDetailsAction.RetryDelete else null
+                    )
                 }
             }
         }
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String, retryAction: RecipeDetailsAction? = null) {
         updateState { it.copy(isLoading = false, errorMessage = message) }
-        sendEvent(RecipeDetailsEvent.ShowError(message))
+        sendEvent(RecipeDetailsEvent.ShowError(message, retryAction))
     }
 
     private fun updateState(reducer: (RecipeDetailsUiState) -> RecipeDetailsUiState) {

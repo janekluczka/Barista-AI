@@ -32,6 +32,7 @@ class LoginViewModel @Inject constructor(
             is LoginAction.UpdatePassword -> updatePassword(action.password)
             LoginAction.TogglePasswordVisibility -> togglePasswordVisibility()
             LoginAction.SubmitLogin -> submitLogin()
+            LoginAction.RetrySignIn -> submitLogin()
             LoginAction.RequestGoogleSignIn -> sendEvent(LoginEvent.RequestGoogleSignIn)
             is LoginAction.SubmitGoogleSignIn -> submitGoogleSignIn(action.idToken)
             is LoginAction.ReportGoogleSignInFailure -> reportGoogleSignInFailure(action.message)
@@ -76,7 +77,10 @@ class LoginViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     sendEvent(LoginEvent.NavigateToHome)
                 }
-                is RepositoryResult.Failure -> handleError(result.error)
+                is RepositoryResult.Failure -> handleError(
+                    result.error,
+                    if (result.error.isRetryable) LoginAction.RetrySignIn else null
+                )
             }
         }
     }
@@ -98,7 +102,7 @@ class LoginViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     sendEvent(LoginEvent.NavigateToHome)
                 }
-                is RepositoryResult.Failure -> handleError(result.error)
+                is RepositoryResult.Failure -> handleError(result.error, retryAction = null)
             }
         }
     }
@@ -110,7 +114,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun handleError(error: RepositoryError) {
+    private fun handleError(error: RepositoryError, retryAction: LoginAction? = null) {
         val (emailError, passwordError, message) = when (error) {
             is RepositoryError.Validation -> mapValidationError(error.message)
             is RepositoryError.Network -> Triple(null, null, error.message)
@@ -129,7 +133,7 @@ class LoginViewModel @Inject constructor(
 
         val messageToShow = message?.takeIf { it.isNotBlank() } ?: fallbackMessage
         if (emailError == null && passwordError == null && !messageToShow.isNullOrBlank()) {
-            sendEvent(LoginEvent.ShowError(messageToShow))
+            sendEvent(LoginEvent.ShowError(messageToShow, retryAction))
         }
     }
 

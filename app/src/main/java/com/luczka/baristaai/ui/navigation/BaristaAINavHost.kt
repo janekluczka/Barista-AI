@@ -108,7 +108,7 @@ fun MainAppNavHost(
                         GeneratedRecipesEvent.NavigateToSuccess -> navController.navigate(
                             Route.GeneratedRecipesSuccess
                         )
-                        is GeneratedRecipesEvent.ShowMessage -> Unit
+                        else -> Unit
                     }
                 }
             )

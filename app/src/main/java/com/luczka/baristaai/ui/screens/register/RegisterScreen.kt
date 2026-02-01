@@ -16,8 +16,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -64,7 +66,21 @@ fun RegisterRoute(
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                is RegisterEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+                is RegisterEvent.ShowError -> {
+                    val result = if (event.retryAction != null) {
+                        snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = "Retry",
+                            duration = SnackbarDuration.Short,
+                            withDismissAction = true
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(event.message)
+                    }
+                    if (result == SnackbarResult.ActionPerformed && event.retryAction != null) {
+                        viewModel.handleAction(event.retryAction)
+                    }
+                }
                 RegisterEvent.RequestGoogleSignIn -> {
                     if (webClientId.isBlank()) {
                         viewModel.handleAction(

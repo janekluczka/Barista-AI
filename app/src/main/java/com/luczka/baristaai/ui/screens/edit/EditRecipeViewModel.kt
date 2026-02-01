@@ -14,20 +14,20 @@ import com.luczka.baristaai.domain.model.RecipeActionModel
 import com.luczka.baristaai.domain.model.RecipeStatus
 import com.luczka.baristaai.domain.model.UpdateRecipe
 import com.luczka.baristaai.domain.usecase.CreateRecipeActionLogUseCase
+import com.luczka.baristaai.domain.usecase.CreateRecipeUseCase
 import com.luczka.baristaai.domain.usecase.GetRecipeUseCase
 import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
-import com.luczka.baristaai.domain.usecase.CreateRecipeUseCase
 import com.luczka.baristaai.domain.usecase.UpdateRecipeUseCase
 import com.luczka.baristaai.ui.navigation.EditRecipeMode
-import java.util.Locale
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
+import javax.inject.Inject
 
 @HiltViewModel
 class EditRecipeViewModel @Inject constructor(
@@ -73,6 +73,8 @@ class EditRecipeViewModel @Inject constructor(
             is EditRecipeAction.UpdateTemperature -> updateTemperature(action.value)
             is EditRecipeAction.UpdateAssistantTip -> updateAssistantTip(action.value)
             EditRecipeAction.Submit -> submit()
+            EditRecipeAction.Retry -> submit()
+            EditRecipeAction.RetryLoad -> loadInitialData(_uiState.value.recipeId)
         }
     }
 
@@ -181,7 +183,11 @@ class EditRecipeViewModel @Inject constructor(
         viewModelScope.launch {
             val brewMethodsResult = listBrewMethodsUseCase()
             if (brewMethodsResult is RepositoryResult.Failure) {
-                showError("Failed to load brew methods.")
+                val error = brewMethodsResult.error
+                showError(
+                    "Failed to load brew methods.",
+                    if (error.isRetryable) EditRecipeAction.RetryLoad else null
+                )
                 return@launch
             }
 
@@ -200,7 +206,11 @@ class EditRecipeViewModel @Inject constructor(
 
             val recipeResult = getRecipeUseCase(recipeId)
             if (recipeResult is RepositoryResult.Failure) {
-                showError(resolveErrorMessage(recipeResult.error))
+                val error = recipeResult.error
+                showError(
+                    resolveErrorMessage(error),
+                    if (error.isRetryable) EditRecipeAction.RetryLoad else null
+                )
                 return@launch
             }
 
@@ -252,14 +262,14 @@ class EditRecipeViewModel @Inject constructor(
         )
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String, retryAction: EditRecipeAction? = null) {
         updateState { state ->
             state.copy(
                 isLoading = false,
                 errorMessage = message
             )
         }
-        sendEvent(EditRecipeEvent.ShowError(message))
+        sendEvent(EditRecipeEvent.ShowError(message, retryAction))
     }
 
     private fun updateText(
@@ -471,7 +481,10 @@ class EditRecipeViewModel @Inject constructor(
                 sendEvent(EditRecipeEvent.ShowMessage("Recipe saved."))
                 sendEvent(EditRecipeEvent.NavigateToHome)
             }
-            is RepositoryResult.Failure -> showError(resolveErrorMessage(result.error))
+            is RepositoryResult.Failure -> showError(
+                resolveErrorMessage(result.error),
+                if (result.error.isRetryable) EditRecipeAction.Retry else null
+            )
         }
     }
 

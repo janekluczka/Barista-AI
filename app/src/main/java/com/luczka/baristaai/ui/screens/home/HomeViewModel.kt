@@ -16,13 +16,13 @@ import com.luczka.baristaai.domain.usecase.ListBrewMethodsUseCase
 import com.luczka.baristaai.domain.usecase.ListRecipesUseCase
 import com.luczka.baristaai.domain.usecase.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -45,6 +45,7 @@ class HomeViewModel @Inject constructor(
     fun handleAction(action: HomeAction) {
         when (action) {
             HomeAction.LoadRecipes -> loadRecipes()
+            HomeAction.RetryLoadProfile -> loadProfile()
             HomeAction.LoadMore -> loadMoreRecipes()
             is HomeAction.SelectFilter -> selectFilter(action.filterId)
             HomeAction.OpenProfile -> updateState { it.copy(isProfileSheetVisible = true) }
@@ -73,7 +74,11 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val filtersResult = listBrewMethodsUseCase()
             if (filtersResult is RepositoryResult.Failure) {
-                showError("Failed to load brew methods.")
+                val error = filtersResult.error
+                showError(
+                    "Failed to load brew methods.",
+                    if (error.isRetryable) HomeAction.LoadRecipes else null
+                )
                 return@launch
             }
 
@@ -120,13 +125,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String, retryAction: HomeAction? = null) {
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             isLoadingMore = false,
             errorMessage = message
         )
-        sendEvent(HomeEvent.ShowError(message))
+        sendEvent(HomeEvent.ShowError(message, retryAction))
     }
 
     private fun updateState(reducer: (HomeUiState) -> HomeUiState) {
@@ -205,7 +210,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         if (reset) {
-            sendEvent(HomeEvent.ShowError(message))
+            sendEvent(HomeEvent.ShowError(message, if (error.isRetryable) HomeAction.LoadRecipes else null))
         }
     }
 
@@ -237,7 +242,12 @@ class HomeViewModel @Inject constructor(
                 }
                 is RepositoryResult.Failure -> {
                     updateState { it.copy(isProfileLoading = false) }
-                    sendEvent(HomeEvent.ShowError(mapProfileError(result.error)))
+                    sendEvent(
+                        HomeEvent.ShowError(
+                            mapProfileError(result.error),
+                            if (result.error.isRetryable) HomeAction.RetryLoadProfile else null
+                        )
+                    )
                 }
             }
         }
@@ -253,7 +263,12 @@ class HomeViewModel @Inject constructor(
                 }
                 is RepositoryResult.Failure -> {
                     updateState { it.copy(isProfileLoading = false) }
-                    sendEvent(HomeEvent.ShowError(mapProfileError(result.error)))
+                    sendEvent(
+                        HomeEvent.ShowError(
+                            mapProfileError(result.error),
+                            if (result.error.isRetryable) HomeAction.ConfirmLogout else null
+                        )
+                    )
                 }
             }
         }

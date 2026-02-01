@@ -31,8 +31,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
@@ -76,6 +78,21 @@ fun GeneratedRecipesRoute(
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
+                is GeneratedRecipesEvent.ShowError -> {
+                    val result = if (event.retryAction != null) {
+                        snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = "Retry",
+                            duration = SnackbarDuration.Short,
+                            withDismissAction = true
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(event.message)
+                    }
+                    if (result == SnackbarResult.ActionPerformed && event.retryAction != null) {
+                        viewModel.handleAction(event.retryAction)
+                    }
+                }
                 is GeneratedRecipesEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
                 else -> onEvent(event)
             }

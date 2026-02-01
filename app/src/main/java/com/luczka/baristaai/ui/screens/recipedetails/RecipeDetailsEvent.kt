@@ -5,5 +5,5 @@ sealed interface RecipeDetailsEvent {
     data object NavigateToHome : RecipeDetailsEvent
     data class NavigateToEdit(val recipeId: String) : RecipeDetailsEvent
     data class ShowMessage(val message: String) : RecipeDetailsEvent
-    data class ShowError(val message: String) : RecipeDetailsEvent
+    data class ShowError(val message: String, val retryAction: RecipeDetailsAction? = null) : RecipeDetailsEvent
 }

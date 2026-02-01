@@ -20,8 +20,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -56,7 +58,21 @@ fun GenerateRecipeRoute(
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                is GenerateRecipeEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+                is GenerateRecipeEvent.ShowError -> {
+                    val result = if (event.retryAction != null) {
+                        snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = "Retry",
+                            duration = SnackbarDuration.Short,
+                            withDismissAction = true
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(event.message)
+                    }
+                    if (result == SnackbarResult.ActionPerformed && event.retryAction != null) {
+                        viewModel.handleAction(event.retryAction)
+                    }
+                }
                 else -> onEvent(event)
             }
         }

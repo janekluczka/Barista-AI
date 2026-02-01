@@ -32,6 +32,7 @@ class RegisterViewModel @Inject constructor(
             is RegisterAction.UpdatePassword -> updatePassword(action.password)
             is RegisterAction.UpdateConfirmPassword -> updateConfirmPassword(action.confirmPassword)
             RegisterAction.SubmitRegister -> submitRegister()
+            RegisterAction.RetrySignUp -> submitRegister()
             RegisterAction.RequestGoogleSignIn -> sendEvent(RegisterEvent.RequestGoogleSignIn)
             is RegisterAction.SubmitGoogleSignIn -> submitGoogleSignIn(action.idToken)
             is RegisterAction.ReportGoogleSignInFailure -> reportGoogleSignInFailure(action.message)
@@ -90,7 +91,10 @@ class RegisterViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     sendEvent(RegisterEvent.NavigateToHome)
                 }
-                is RepositoryResult.Failure -> handleError(result.error)
+                is RepositoryResult.Failure -> handleError(
+                    result.error,
+                    if (result.error.isRetryable) RegisterAction.RetrySignUp else null
+                )
             }
         }
     }
@@ -112,7 +116,7 @@ class RegisterViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     sendEvent(RegisterEvent.NavigateToHome)
                 }
-                is RepositoryResult.Failure -> handleError(result.error)
+                is RepositoryResult.Failure -> handleError(result.error, retryAction = null)
             }
         }
     }
@@ -124,7 +128,7 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
-    private fun handleError(error: RepositoryError) {
+    private fun handleError(error: RepositoryError, retryAction: RegisterAction? = null) {
         val (emailError, passwordError, message) = when (error) {
             is RepositoryError.Validation -> mapValidationError(error.message)
             is RepositoryError.Network -> Triple(null, null, error.message)
@@ -143,7 +147,7 @@ class RegisterViewModel @Inject constructor(
 
         val messageToShow = message?.takeIf { it.isNotBlank() } ?: fallbackMessage
         if (emailError == null && passwordError == null && !messageToShow.isNullOrBlank()) {
-            sendEvent(RegisterEvent.ShowError(messageToShow))
+            sendEvent(RegisterEvent.ShowError(messageToShow, retryAction))
         }
     }
 
