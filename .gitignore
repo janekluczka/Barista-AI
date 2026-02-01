@@ -52,6 +52,7 @@ captures/
 .idea/jarRepositories.xml
 .idea/deploymentTargetSelector.xml
 .idea/kotlinc.xml
+.idea/androidTestResultsUserPreferences.xml
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild/

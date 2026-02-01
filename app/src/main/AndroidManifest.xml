@@ -34,6 +34,11 @@
             android:name=".MainAppActivity"
             android:exported="false"
             android:theme="@style/Theme.BaristaAI" />
+
+        <activity
+            android:name=".EmptyComposeActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BaristaAI" />
     </application>
 
 </manifest>
