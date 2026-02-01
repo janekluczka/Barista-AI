@@ -47,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
+import com.luczka.baristaai.ui.components.DividerWithText
 import com.luczka.baristaai.ui.components.GoogleSignInButton
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -92,7 +93,7 @@ fun LoginRoute(
                                     .createFrom(result.credential.data)
                                 val idToken = googleIdTokenCredential.idToken
                                 viewModel.handleAction(LoginAction.SubmitGoogleSignIn(idToken))
-                            } catch (e: GetCredentialCancellationException) {
+                            } catch (_: GetCredentialCancellationException) {
                                 viewModel.handleAction(
                                     LoginAction.ReportGoogleSignInFailure(
                                         "Google Sign-In was cancelled."
@@ -221,6 +222,11 @@ fun LoginScreen(
                     Text(text = "Log in")
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            DividerWithText(
+                text = "or",
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(12.dp))
             GoogleSignInButton(
                 onClick = { onAction(LoginAction.RequestGoogleSignIn) },

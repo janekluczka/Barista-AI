@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -46,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.luczka.baristaai.BuildConfig
+import com.luczka.baristaai.ui.components.DividerWithText
 import com.luczka.baristaai.ui.components.GoogleSignInButton
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -91,7 +93,7 @@ fun RegisterRoute(
                                     .createFrom(result.credential.data)
                                 val idToken = googleIdTokenCredential.idToken
                                 viewModel.handleAction(RegisterAction.SubmitGoogleSignIn(idToken))
-                            } catch (e: GetCredentialCancellationException) {
+                            } catch (_: GetCredentialCancellationException) {
                                 viewModel.handleAction(
                                     RegisterAction.ReportGoogleSignInFailure(
                                         "Google Sign-In was cancelled."
@@ -134,7 +136,7 @@ fun RegisterScreen(
                 navigationIcon = {
                     IconButton(onClick = { onAction(RegisterAction.NavigateToLogin) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -150,77 +152,96 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Fill in your data.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = { onAction(RegisterAction.UpdateEmail(it)) },
-                label = { Text(text = "Email") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = uiState.emailError != null,
-                supportingText = {
-                    if (uiState.emailError != null) {
-                        Text(text = uiState.emailError)
-                    }
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Top
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                GoogleSignInButton(
+                    onClick = { onAction(RegisterAction.RequestGoogleSignIn) },
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = { onAction(RegisterAction.UpdatePassword(it)) },
-                label = { Text(text = "Password") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = uiState.passwordError != null,
-                supportingText = {
-                    if (uiState.passwordError != null) {
-                        Text(text = uiState.passwordError)
-                    }
-                },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onAction(RegisterAction.SubmitRegister) }
+                Spacer(modifier = Modifier.height(8.dp))
+                DividerWithText(
+                    text = "or",
+                    modifier = Modifier.fillMaxWidth()
                 )
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = uiState.confirmPassword,
-                onValueChange = { onAction(RegisterAction.UpdateConfirmPassword(it)) },
-                label = { Text(text = "Confirm password") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = uiState.confirmPasswordError != null,
-                supportingText = {
-                    if (uiState.confirmPasswordError != null) {
-                        Text(text = uiState.confirmPasswordError)
-                    }
-                },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onAction(RegisterAction.SubmitRegister) }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Fill in your data.",
+                    style = MaterialTheme.typography.bodyLarge
                 )
-            )
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.email,
+                    onValueChange = { onAction(RegisterAction.UpdateEmail(it)) },
+                    label = { Text(text = "Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = uiState.emailError != null,
+                    supportingText = {
+                        if (uiState.emailError != null) {
+                            Text(text = uiState.emailError)
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = uiState.password,
+                    onValueChange = { onAction(RegisterAction.UpdatePassword(it)) },
+                    label = { Text(text = "Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = uiState.passwordError != null,
+                    supportingText = {
+                        if (uiState.passwordError != null) {
+                            Text(text = uiState.passwordError)
+                        }
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { onAction(RegisterAction.SubmitRegister) }
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = uiState.confirmPassword,
+                    onValueChange = { onAction(RegisterAction.UpdateConfirmPassword(it)) },
+                    label = { Text(text = "Confirm password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = uiState.confirmPasswordError != null,
+                    supportingText = {
+                        if (uiState.confirmPasswordError != null) {
+                            Text(text = uiState.confirmPasswordError)
+                        }
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { onAction(RegisterAction.SubmitRegister) }
+                    )
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+            }
             Button(
                 onClick = { onAction(RegisterAction.SubmitRegister) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
@@ -233,19 +254,6 @@ fun RegisterScreen(
                     Text(text = "Create account")
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "or",
-                style = MaterialTheme.typography.labelMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            GoogleSignInButton(
-                onClick = { onAction(RegisterAction.RequestGoogleSignIn) },
-                enabled = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }
