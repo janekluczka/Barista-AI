@@ -1,7 +1,5 @@
 # BaristaAI
 
-[![CI](https://github.com/luczka/BaristaAI/actions/workflows/ci.yml/badge.svg)](https://github.com/luczka/BaristaAI/actions/workflows/ci.yml)
-
 ## Table of Contents
 
 - [Project Description](#project-description)
